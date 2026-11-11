@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mapping (4/6): علاقات One-to-One بكل حالاتها</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:520px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+details{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 14px;margin:.5em 0}
+summary{cursor:pointer;color:var(--acc);font-weight:700}
+.dg{direction:ltr;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin:.8em 0}
+.dg svg{min-width:720px;width:100%;height:auto;display:block}
+.bx{fill:var(--card);stroke:var(--acc);stroke-width:1.5}.dc{fill:var(--okbg);stroke:var(--acc);stroke-width:1.5}
+.hd{font:700 12.5px Consolas,Menlo,monospace;fill:var(--acc)}.tx{font:11.5px Consolas,Menlo,monospace;fill:var(--fg)}
+.ln{stroke:var(--fg);stroke-width:1.4;fill:none}.op{fill:none;stroke:var(--fg)}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Mapping (الجزء 4 من 6): علاقات One-to-One</h1>
+<p class="lead">سلايدات 25 إلى 39. علاقة 1:1 تبان بسيطة لكنها أكتر علاقة بتتلخبط في تحويلها، لأن الـ FK ممكن ينزل في أي جدول، والـ participation هو اللي بيحدد القرار. فيه تصحيح مهم على سلايد 27.</p>
+<nav><a href="#a">1. القاعدة</a><a href="#b">2. إجبارية الطرفين</a><a href="#c">3. إجبارية من طرف</a><a href="#d">4. اختيارية الطرفين</a><a href="#e">5. Shared PK</a><a href="#f">6. مشاكل</a><a href="#x">7. تمارين</a></nav>
+
+<h2 id="a">1) فكرة الـ 1:1 وقاعدة القرار</h2>
+<p>في الجدول، علاقة 1:1 معناها: الـ FK لازم يكون <b>UNIQUE</b> (وإلا هتتحول لـ 1:N). والسؤال: الـ FK في أنهي جدول؟ والـ participation هو اللي يرد:</p>
+<div class="dg">
+<svg viewBox="0 0 800 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="1:1 decision tree">
+<defs><marker id="ar" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path class="op" d="M1 1L10 6L1 11"/></marker></defs>
+<rect class="bx" x="310" y="8" width="180" height="40" rx="5"/><text class="hd" x="322" y="33">علاقة 1:1: participation؟</text>
+<rect class="dc" x="10" y="100" width="230" height="100" rx="5"/><text class="hd" x="20" y="122">الطرفين Total (1,1)-(1,1)</text><text class="tx" x="20" y="142">دمج في جدول واحد (الأفضل)،</text><text class="tx" x="20" y="158">أو FK + UNIQUE + NOT NULL</text><text class="tx" x="20" y="174">في أي جدول (أو Shared PK)</text>
+<rect class="dc" x="285" y="100" width="230" height="100" rx="5"/><text class="hd" x="295" y="122">طرف Total وطرف Partial</text><text class="tx" x="295" y="142">FK في جدول الـ Total</text><text class="tx" x="295" y="158">NOT NULL + UNIQUE</text><text class="tx" x="295" y="174">(مفيش NULL خالص)</text>
+<rect class="dc" x="560" y="100" width="230" height="100" rx="5"/><text class="hd" x="570" y="122">الطرفين Partial (0,1)-(0,1)</text><text class="tx" x="570" y="142">جدول علاقة (PK + UNIQUE)</text><text class="tx" x="570" y="158">أو FK nullable + filtered</text><text class="tx" x="570" y="174">unique index</text>
+<path class="ln" d="M370 48L125 100" marker-end="url(#ar)"/><path class="ln" d="M400 48V100" marker-end="url(#ar)"/><path class="ln" d="M430 48L675 100" marker-end="url(#ar)"/>
+</svg></div>
+<div class="box warn"><p><b class="t">ملحوظة عن التدوين (min,max):</b> سلايدات 31 و 36 بتكتب (0,1) و (1,1) جنب الكيانين. فيه مدرستين: "Look here" (الرقم جنب الكيان يوصف مشاركته هو) و"Look across" (الرقم يوصف الكيان اللي في الطرف التاني). السلايد بيستخدم Look here. وفي Crow's Foot (الأشهر في الأدوات) العكس. اتأكد دايماً من الاتجاه قبل الحكم.</p></div>
+
+<h2 id="b">2) إجبارية من الطرفين: DOCTOR و MEDICAL_LICENSE (سلايد 25 إلى 30)</h2>
+<p><b>السيناريو:</b> كل دكتور له رخصة طبية واحدة بالظبط، وكل رخصة لدكتور واحد بالظبط.</p>
+<p><b>الخيار A (الـ FK في DOCTOR):</b></p>
+<pre><code>CREATE TABLE MedicalLicenses (
+    LicenseID INT PRIMARY KEY, LicenseNumber NVARCHAR(30) NOT NULL UNIQUE,
+    IssueDate DATE NOT NULL, ExpiryDate DATE NOT NULL);
+
+CREATE TABLE Doctors (
+    DoctorID INT PRIMARY KEY, FullName NVARCHAR(100) NOT NULL, Specialization NVARCHAR(60) NOT NULL, HireDate DATE NOT NULL,
+    LicenseID INT NOT NULL UNIQUE                       -- NOT NULL: كل دكتور له رخصة، UNIQUE: رخصة لدكتور واحد
+        CONSTRAINT FK_Doctors_Licenses REFERENCES MedicalLicenses(LicenseID));</code></pre>
+<p><b>الخيار B (الـ FK في MEDICAL_LICENSE):</b> نفس الفكرة مع <code>DoctorID INT NOT NULL UNIQUE</code> في الرخصة.</p>
+<h3>ليه NOT NULL و UNIQUE بالذات؟ (سلايد 28)</h3>
+<pre><code>INSERT INTO Doctors (DoctorID, FullName, Specialization, HireDate, LicenseID) VALUES (4, 'Dan', 'ENT', '2024-01-01', NULL);   -- ✗ NOT NULL: دكتور بلا رخصة
+INSERT INTO Doctors (DoctorID, FullName, Specialization, HireDate, LicenseID) VALUES (5, 'Eve', 'ENT', '2024-01-01', 101);    -- ✗ UNIQUE: الرخصة 101 مرتبطة بدكتور تاني</code></pre>
+<div class="box warn"><p><b class="t">تصحيح لسلايد 27 و 30:</b> السلايد بيقول إن الخيارين A و B "بيطبقوا mandatory 1:1". الحقيقة: الـ FK مع NOT NULL و UNIQUE بيضمن فقط إن <b>الجدول اللي فيه الـ FK</b> كل صف فيه مرتبط بـ <b>واحد بالظبط</b> من الآخر، لكنه <b>لا يضمن</b> إن كل صف في الجدول التاني له ارتباط. في الخيار A ممكن تضيف رخصة (<code>MedicalLicenses</code>) ومحدش يشاور عليها (رخصة بلا دكتور) والـ DBMS مش هيعترض، رغم إن "كل رخصة لدكتور" total. نفس المشكلة في الخيار B بالعكس.</p></div>
+<h3>حلول فعلية للـ total على الطرفين</h3>
+<ol>
+<li><b>دمج الجدولين في واحد (الأنظف):</b> لو الاتنين دايماً مع بعض ومفيش سبب للفصل، اعمل <code>Doctors</code> فيها أعمدة الرخصة (<code>LicenseNumber, IssueDate, ExpiryDate</code>).</li>
+<li><b>Shared PK:</b> <code>MedicalLicenses.DoctorID</code> هو PK وFK في نفس الوقت (القسم 5).</li>
+<li><b>Transaction + trigger/منطق تطبيق:</b> تضيف الاتنين في transaction واحدة، وtrigger يرفض الرخصة اليتيمة.</li>
+<li><b>Deferrable constraints:</b> في PostgreSQL، لكن مش في SQL Server.</li>
+</ol>
+<div class="tw"><table>
+<tr><th>DoctorID</th><th>FullName</th><th>Specialization</th><th>LicenseID</th></tr>
+<tr><td>1</td><td>Alice Smith</td><td>Cardiology</td><td>101</td></tr><tr><td>2</td><td>Brian Miller</td><td>Neurology</td><td>102</td></tr><tr><td>3</td><td>Carol Lee</td><td>Pediatrics</td><td>103</td></tr>
+</table></div>
+<p><b>ترتيب الإدخال:</b> في الخيار A لازم ترخص (<code>MedicalLicenses</code>) الأول ثم الدكتور (لأن الـ FK بيشاور عليها). وده بيخلي ترتيب الحذف معكوس.</p>
+
+<h2 id="c">3) إجبارية من طرف واختيارية من الآخر: FACULTY_MEMBER و OFFICE (سلايد 31 إلى 35)</h2>
+<p><b>السيناريو:</b> عضو هيئة التدريس ممكن يكون له مكتب أو لا (0,1)، لكن كل مكتب لازم يخص عضو واحد بالظبط (1,1).</p>
+<p><b>القاعدة:</b> الـ FK في جدول الجانب <b>الـ Total (OFFICE)</b> مع <code>NOT NULL UNIQUE</code>، والجانب الاختياري ما بيحملش حاجة.</p>
+<pre><code>CREATE TABLE FacultyMembers (MemberID INT PRIMARY KEY, FullName NVARCHAR(100) NOT NULL, Email NVARCHAR(256) NOT NULL, Department NVARCHAR(80) NOT NULL);
+CREATE TABLE Offices (
+    OfficeID INT PRIMARY KEY, Building NVARCHAR(60) NOT NULL, RoomNumber NVARCHAR(10) NOT NULL, Phone NVARCHAR(20) NULL,
+    MemberID INT NOT NULL UNIQUE REFERENCES FacultyMembers(MemberID));</code></pre>
+<h3>ليه ده التصميم الأمثل؟</h3>
+<ul>
+<li>لو حطينا <code>OfficeID</code> في FacultyMembers، كل عضو بلا مكتب (member 4 في السلايد 35) هيبقى فيه <b>NULL</b>، وكمان UNIQUE على nullable بيتصرف مختلف (القسم 4).</li>
+<li>بوضعه في OFFICE الـ total، بنطبق "كل مكتب لعضو" تصريحاً (NOT NULL)، ومفيش NULL في أي حتة.</li>
+<li>"المكتب لازم يخص عضو" مفروض بالـ DB. "كل عضو له مكتب" غير مطلوب فمش مفروض.</li>
+</ul>
+<pre><code>-- أعضاء بلا مكتب (member 4)
+SELECT f.MemberID, f.FullName FROM FacultyMembers f LEFT JOIN Offices o ON o.MemberID = f.MemberID WHERE o.OfficeID IS NULL;
+-- مكتبين لنفس العضو → ✗ UNIQUE violation</code></pre>
+<pre><code>// EF Core: نحدد الـ dependent صراحة في 1:1
+modelBuilder.Entity&lt;FacultyMember&gt;().HasOne(f =&gt; f.Office).WithOne(o =&gt; o.Member)
+    .HasForeignKey&lt;Office&gt;(o =&gt; o.MemberID).IsRequired();      // EF بينشئ unique index على MemberID تلقائياً</code></pre>
+
+<h2 id="d">4) اختيارية من الطرفين: STUDENT و LOCKER (سلايد 36 إلى 39)</h2>
+<p><b>السيناريو:</b> طالب ممكن يكون له locker أو لا، وlocker ممكن يتخصص لطالب أو لا (0,1)-(0,1).</p>
+<h3>الخيار 1: جدول علاقة (سلايد 37 إلى 39)</h3>
+<pre><code>CREATE TABLE StudentLockers (
+    StudentID INT NOT NULL PRIMARY KEY REFERENCES Students(StudentID),    -- PK: طالب واحد في صف واحد
+    LockerID  INT NOT NULL UNIQUE      REFERENCES Lockers(LockerID),      -- locker واحد لطالب واحد
+    AssignedOn DATE NOT NULL DEFAULT CAST(GETDATE() AS DATE));            -- ميزة: خصائص العلاقة</code></pre>
+<p>لو طالب معاهوش locker ما فيش صف. الـ NULLs اختفت. وفي السلايد 39 ثلاث حالات: طالب 2 بلا locker، وlocker 102 و 104 غير مخصصين.</p>
+<h3>الخيار 2: FK nullable في أحد الجدولين (أبسط وأسرع في القراءة)</h3>
+<pre><code>ALTER TABLE Students ADD LockerID INT NULL REFERENCES Lockers(LockerID);
+-- محتاج UNIQUE لكن القيم NULL كتير:
+CREATE UNIQUE INDEX UX_Students_Locker ON Students(LockerID) WHERE LockerID IS NOT NULL;   -- filtered unique</code></pre>
+<div class="box warn"><p><b class="t">أخطر فخ في الـ 1:1 الاختياري:</b> <code>UNIQUE</code> constraint عادي على عمود nullable في <b>SQL Server</b> بيسمح بـ <b>NULL واحد فقط</b>! أول طالب بلا locker تمام، تاني طالب بلا locker → خطأ duplicate. بينما PostgreSQL و MySQL بيسمحوا بأكتر من NULL. الحل في SQL Server: filtered unique index كالمثال. وEF Core غالباً بيضيف الفلتر ده تلقائياً لما تعرّف unique index على عمود nullable في SQL Server (اتأكد من الـ migration الناتج).</p></div>
+<div class="tw"><table>
+<tr><th></th><th>جدول علاقة</th><th>FK nullable + filtered unique</th></tr>
+<tr><td>NULLs</td><td>مفيش</td><td>موجودة في الجدول الحامل</td></tr>
+<tr><td>القراءة</td><td>join إضافي</td><td>عمود مباشر (أسرع)</td></tr>
+<tr><td>خصائص العلاقة (AssignedOn)</td><td>سهل</td><td>لازم أعمدة زيادة</td></tr>
+<tr><td>تاريخ التخصيص (locker انتقل)</td><td>يحتاج PK مختلف (جدول تاريخ)</td><td>يحتاج جدول منفصل</td></tr>
+<tr><td>تعقيد التصميم</td><td>أعلى (جدول زيادة)</td><td>أقل</td></tr>
+<tr><td>إمتى</td><td>العلاقة ليها خصائص أو نادرة</td><td>العلاقة بسيطة وشائعة</td></tr>
+</table></div>
+<p><b>رأيي العملي:</b> السلايد بيقترح جدول العلاقة كـ "Recommended for clarity"، وهو مقبول، لكن كتير من المشاريع بتختار FK nullable + filtered unique لأنه أبسط. القرار بيعتمد على: هل العلاقة ليها خصائص؟ ومدى ندرتها؟ وحساسية القراءة؟</p>
+<pre><code>modelBuilder.Entity&lt;Student&gt;().HasOne(s =&gt; s.Locker).WithOne(l =&gt; l.Student)
+    .HasForeignKey&lt;Student&gt;(s =&gt; s.LockerID).IsRequired(false);</code></pre>
+
+<h2 id="e">5) Shared Primary Key (PK = FK)</h2>
+<p>للـ 1:1 اللي فيه جدول "امتداد" (extension) لجدول رئيسي: الـ PK للجدول التابع هو نفسه الـ FK.</p>
+<pre><code>CREATE TABLE Users (UserID INT IDENTITY PRIMARY KEY, Email NVARCHAR(256) NOT NULL UNIQUE);
+CREATE TABLE UserProfiles (
+    UserID INT PRIMARY KEY REFERENCES Users(UserID) ON DELETE CASCADE,    -- PK و FK معاً
+    Bio NVARCHAR(500), AvatarUrl NVARCHAR(300), BirthDate DATE);
+
+modelBuilder.Entity&lt;User&gt;().HasOne(u =&gt; u.Profile).WithOne(p =&gt; p.User).HasForeignKey&lt;UserProfile&gt;(p =&gt; p.UserID);</code></pre>
+<ul>
+<li><b>مميزاته:</b> الـ 1:1 مضمونة (PK بالتعريف unique)، ومفيش عمود زيادة ولا index زيادة، والـ join على PK سريع.</li>
+<li><b>إمتى تفصل جدول من الأصل؟</b> (1) أعمدة كبيرة أو نادرة الاستخدام (BLOB، bio طويل). (2) صلاحيات مختلفة (بيانات حساسة). (3) معدل تحديث مختلف. (4) الأعمدة اختيارية لمعظم الصفوف (بدل NULLs كتير). وإلا فالدمج أبسط وأسرع.</li>
+</ul>
+
+<h2 id="f">6) مشاكل الإنتاج في الـ 1:1</h2>
+<div class="box warn"><ol>
+<li><b>NULL في UNIQUE:</b> (القسم 4) أشهر خطأ في SQL Server.</li>
+<li><b>الـ FK في الجانب الغلط:</b> بيعمل NULLs كتير، أو يسمح بـ "رخصة بلا دكتور" بالغلط. القاعدة: الـ FK في جدول الـ <b>Total</b>.</li>
+<li><b>تقسيم بلا سبب:</b> بيضيف join لكل قراءة. اسأل: هل بيتم قراءتهم دايماً مع بعض؟ اندمج.</li>
+<li><b>تبديل التخصيص:</b> تبديل locker بين طالبين بـ UPDATE واحد بيكسر UNIQUE مؤقتاً. استخدم transaction: اجعل الأول NULL، حدّث التاني، ثم الأول.</li>
+<li><b>EF Core:</b> لازم تحدد الـ dependent بـ <code>HasForeignKey&lt;T&gt;</code>، وإلا يخمّن ويطلع خطأ "ambiguous". وانتبه لـ <code>Include</code> (أو projection) لتجنب N+1 عند عرض قائمة.</li>
+<li><b>الحذف:</b> الـ total side بيتحذف مع الأصل (CASCADE) منطقياً، لكن الـ partial side لازم RESTRICT أو SET NULL.</li>
+</ol></div>
+
+<h2 id="x">7) تمارين (اضغط لكشف الإجابة)</h2>
+<ol>
+<li>PERSON (0,1) - PASSPORT (1,1): ازاي تحوّلها وفين الـ FK؟</li>
+<li>EMPLOYEE (0,1) - PARKING_SPOT (0,1): ما الخيارات؟</li>
+<li>USER (1,1) - PROFILE (1,1): تحوّل لإيه؟</li>
+<li>COUNTRY (1,1) - CAPITAL (1,1): إيه التصميم الأنسب ولماذا؟</li>
+<li>جدول <code>Students(LockerID INT NULL UNIQUE)</code> في SQL Server رفض طالب ثاني بلا locker. السبب والحل؟</li>
+<li>حوّل: EMPLOYEE (0,1) يدير DEPARTMENT (1,1)، قسم له مدير واحد بالظبط.</li>
+</ol>
+<details><summary>الإجابات</summary><p>(1) FK في <code>Passports</code>: <code>PersonID INT NOT NULL UNIQUE</code>. (2) جدول علاقة <code>EmployeeParking(EmployeeID PK, SpotID UNIQUE)</code> أو FK nullable في Employees مع filtered unique. (3) Shared PK (<code>Profiles.UserID PK/FK</code>) أو دمج لو مفيش سبب للفصل. (4) دمج في جدول <code>Countries</code> مع <code>CapitalName</code> (لو العاصمة مجرد اسم)، أو جدول Cities لو ليها خصائص والـ FK في Countries (CapitalCityID NOT NULL UNIQUE) لأن الدولة total. (5) UNIQUE في SQL Server بيسمح بـ NULL واحد؛ الحل filtered unique index <code>WHERE LockerID IS NOT NULL</code>. (6) FK في <code>Departments</code>: <code>ManagerID INT NOT NULL UNIQUE REFERENCES Employees(EmployeeID)</code> (القسم total، الموظف partial).</p></details>
+
+<footer>الجزء 5: علاقات One-to-Many (إجبارية وجزئية) و Many-to-Many و Recursive. الكود من فهمي ولم أشغله هنا، فجرّبه على SQL Server.</footer>
+</main>
+</body>
+</html>

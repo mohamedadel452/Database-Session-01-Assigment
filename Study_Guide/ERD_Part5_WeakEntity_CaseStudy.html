@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ERD (5/6): Weak Entity وتحويل الـ ERD لجداول ومثال كامل</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:540px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+details{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 14px;margin:.5em 0}
+summary{cursor:pointer;color:var(--acc);font-weight:700}
+.dg{direction:ltr;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin:.8em 0}
+.dg svg{min-width:720px;width:100%;height:auto;display:block}
+.bx{fill:var(--card);stroke:var(--acc);stroke-width:1.5}.dm{fill:var(--card);stroke:#7a4fbf;stroke-width:1.5}
+.hd{font:700 12.5px Consolas,Menlo,monospace;fill:var(--acc)}.tx{font:12px Consolas,Menlo,monospace;fill:var(--fg)}
+.ln{stroke:var(--fg);stroke-width:1.4;fill:none}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>ERD (الجزء 5 من 6): Weak Entity ومثال تصميم كامل</h1>
+<p class="lead">سلايدات 41 إلى 46. الـ Weak Entity أكتر موضوع بيتلخبط فيه الطلبة، وفيه خطأ رسم في سلايد 43 لازم تعرفه. وبعده مثال متجر إلكتروني كامل من الـ ERD للـ SQL والـ EF Core، وخطوات منهجية لتصميم أي ERD.</p>
+<nav><a href="#a">1. التعريف</a><a href="#b">2. الرسم</a><a href="#c">3. الخصائص</a><a href="#d">4. أمثلة</a><a href="#e">5. التحويل لجداول</a><a href="#f">6. مثال كامل</a><a href="#g">7. خطوات</a><a href="#h">8. أخطاء</a><a href="#x">9. تمارين</a></nav>
+
+<h2 id="a">1) إيه هو الـ Weak Entity؟ (سلايد 41 و 42)</h2>
+<p><b>الفكرة:</b> كيان <b>مفيهوش مفتاح كامل يميّزه لوحده</b>. هويته بتعتمد على كيان تاني (الـ Owner / Identifying / Strong Entity). مثال: الـ DEPENDENT (تابع الموظف). الاسم "Mona" لوحده مش بيميّز (ممكن موظفين كتير عندهم تابع اسمه Mona). لكن <b>(EmpID + DepName)</b> بيميّزه.</p>
+<div class="box ok"><p><b>صيغة المفتاح:</b> Primary Key الـ Weak = (PK الـ Owner) + (Partial Key / Discriminator)</p></div>
+<h3>ليه الفكرة موجودة؟</h3>
+<p>لأن في الواقع في أشياء ملهاش معنى بدون أصلها: بند طلب من غير طلب، فصل من غير كتاب، تابع من غير موظف. الـ weak entity بيعبّر عن ده في النموذج وبيفرض إن ما فيش instance يعيش من غير مالكه.</p>
+<h3>Weak مقابل Dependent (دقة مهمة)</h3>
+<p>في التعريف الصارم، Weak = <b>identification-dependent</b> (مفتاحه بيتكوّن من مفتاح المالك). لكن ممكن كيان يكون <b>existence-dependent</b> فقط (يموت بموت المالك) وفي نفس الوقت له surrogate key خاص فيه، وساعتها في التصميم العملي بيتعامل كـ strong entity عادي مع FK <code>NOT NULL</code> و <code>ON DELETE CASCADE</code>. ودي القرارات اللي بتتاخد فعلياً في معظم الأنظمة.</p>
+
+<h2 id="b">2) الرسم والرموز (سلايد 42 و 43) وتصحيح الرسم</h2>
+<div class="tw"><table>
+<tr><th>العنصر</th><th>الرمز (Chen)</th></tr>
+<tr><td>Weak Entity</td><td>مستطيل مزدوج</td></tr>
+<tr><td>Identifying Relationship</td><td>معين مزدوج</td></tr>
+<tr><td>Total Participation للـ Weak في العلاقة</td><td>خط مزدوج بين <b>الـ Weak</b> والمعين المزدوج</td></tr>
+<tr><td>Partial Key (Discriminator)</td><td>بيضاوي بخط تحته <b>متقطع</b></td></tr>
+<tr><td>Full Key</td><td>(PK الـ Owner) + Partial Key</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">تصحيح رسم سلايد 43:</b> السلايد بيرسم الخط المزدوج بين <b>EMPLOYEE</b> والمعين <b>HAS_DEPENDENT</b>، وخط مفرد ناحية <b>DEPENDENT</b>. بينما الشرح تحته بيقول "total participation of DEPENDENT". <b>الرسم عكس القاعدة:</b> الخط المزدوج لازم يكون على جنب الـ <b>Weak</b> (DEPENDENT)، لأن كل تابع لازم يكون له موظف، والموظف ممكن يكون من غير توابع (partial). كمان ناقص كتابة الـ cardinality: <b>1</b> عند EMPLOYEE و <b>N</b> عند DEPENDENT. ومصادر زي كتاب Bagui & Earp وCreately بتأكد إن الـ weak entity دايماً مشاركته total.</p></div>
+<div class="box warn"><p><b class="t">ملاحظة تصميمية على نفس السلايد:</b> EMPLOYEE فيها خاصية <code>Department</code> كنص. في تصميم حقيقي Department كيان مستقل (الجزء 2) ومعاه علاقة 1:N، وإلا كل ما اسم قسم يتغير هتعدل مئات الصفوف.</p></div>
+
+<h2 id="c">3) خصائص الـ Weak Entity (سلايد 44)</h2>
+<ol>
+<li>ملوش Primary Key بنفسه.</li>
+<li>وجوده معتمد على المالك (حذف المالك = حذف الـ weak، عبر CASCADE).</li>
+<li>مشاركته في العلاقة المعرِّفة <b>total</b> دايماً.</li>
+<li>مفتاحه = مفتاح المالك + partial key.</li>
+<li>العلاقة المعرِّفة بتكون <b>1:N</b> (مالك واحد، weak كتير). مش M:N لأن الـ weak لازم ليه مالك <b>واحد</b> يعرّفه.</li>
+<li>الـ partial key لازم يكون فريد <b>داخل نفس المالك فقط</b>، مش في الجدول كله.</li>
+</ol>
+
+<h2 id="d">4) أمثلة وقرار "weak ولا لأ؟"</h2>
+<div class="tw"><table>
+<tr><th>المثال</th><th>Owner</th><th>Partial Key</th><th>ملاحظة</th></tr>
+<tr><td>DEPENDENT</td><td>EMPLOYEE</td><td>DepName</td><td>مثال الكتب الكلاسيكي</td></tr>
+<tr><td>ORDER_ITEM (سلايد 45)</td><td>ORDER</td><td>ItemNo (LineNo)</td><td>كمان بيشاور على PRODUCT (FK)</td></tr>
+<tr><td>CHAPTER</td><td>BOOK</td><td>ChapterNo</td><td>رقم الفصل بيتكرر بين الكتب</td></tr>
+<tr><td>ROOM</td><td>BUILDING</td><td>RoomNo</td><td>"101" موجودة في كل مبنى</td></tr>
+<tr><td>SEAT</td><td>FLIGHT</td><td>SeatNo</td><td>"12A" متكررة في كل رحلة</td></tr>
+<tr><td>INVOICE_LINE</td><td>INVOICE</td><td>LineNo</td><td>نفس فكرة ORDER_ITEM</td></tr>
+</table></div>
+<p><b>اختبار سريع:</b> "هل ممكن أعرف الكيان بخاصيته لوحدها في الجدول كله؟" لو لأ (الرقم "101" أو "1" بتتكرر)، وفي المقابل بتتعرف مع المالك: هو weak. لو ليه ID عالمي (ISBN مثلاً للكتاب) فهو strong.</p>
+<div class="box warn"><p><b class="t">ORDER_ITEM بيلعب دورين:</b> (1) weak entity على ORDER (هويته = OrderID + ItemNo)، و(2) كيان ربط (associative) بين ORDER و PRODUCT بخصائصه (Quantity و UnitPrice). عشان كده في الجزء 3 ناقشنا اختيار PK بين <code>(OrderID, ProductID)</code> و <code>(OrderID, LineNo)</code>. الثاني أمرن (يسمح بنفس المنتج مرتين) والأول يمنع التكرار.</p></div>
+
+<h2 id="e">5) التحويل لجداول (سلايد 46)</h2>
+<ol>
+<li>اعمل جدول للـ Owner بـ PK عادي.</li>
+<li>اعمل جدول للـ Weak.</li>
+<li>أضف PK الـ Owner في جدول الـ Weak كـ <b>Foreign Key</b>.</li>
+<li>PK الـ Weak = (FK الـ Owner + Partial Key).</li>
+</ol>
+<pre><code>CREATE TABLE Employees (
+    EmpID INT PRIMARY KEY, EmpName NVARCHAR(100) NOT NULL, HireDate DATE NOT NULL);
+
+CREATE TABLE Dependents (
+    EmpID        INT          NOT NULL,                       -- FK + جزء من PK
+    DepName      NVARCHAR(60) NOT NULL,                       -- partial key
+    BirthDate    DATE         NULL,
+    Gender       CHAR(1)      NULL,
+    Relationship NVARCHAR(30) NOT NULL,
+    PRIMARY KEY (EmpID, DepName),
+    FOREIGN KEY (EmpID) REFERENCES Employees(EmpID) ON DELETE CASCADE   -- حذف الموظف = حذف توابعه
+);</code></pre>
+<h3>EF Core: طريقتين</h3>
+<pre><code>// 1) كيان عادي بمفتاح مركب
+modelBuilder.Entity&lt;Dependent&gt;(d =&gt;
+{
+    d.HasKey(x =&gt; new { x.EmpID, x.DepName });
+    d.HasOne(x =&gt; x.Employee).WithMany(e =&gt; e.Dependents).HasForeignKey(x =&gt; x.EmpID).OnDelete(DeleteBehavior.Cascade);
+});
+
+// 2) Owned collection: بيمثّل existence + identification dependence طبيعياً
+modelBuilder.Entity&lt;Employee&gt;().OwnsMany(e =&gt; e.Dependents, d =&gt;
+{
+    d.WithOwner().HasForeignKey("EmpID");
+    d.Property&lt;int&gt;("Id");  d.HasKey("Id");               // أو HasKey("EmpID","DepName")
+    d.ToTable("Dependents");
+});</code></pre>
+<p>الـ Owned types معناها إنك مش هتعمل <code>db.Dependents</code> مباشرة، بتتعامل معاهم عن طريق الـ Employee. مناسبة لما الـ weak entity بتتعامل معاه دايماً مع مالكه.</p>
+<div class="box warn"><p><b class="t">مشاكل واقعية:</b> (1) أي جدول ابن للـ weak (مثلاً <code>DependentMedicalRecords</code>) لازم يكرر مفتاحه المركب كله (EmpID, DepName). فكتير بيضيفوا <b>surrogate key</b> للـ weak (<code>DependentId IDENTITY</code>) مع <code>UNIQUE (EmpID, DepName)</code> وده يحافظ على القاعدة ويسهّل الـ FKs. (2) لو الـ partial key اتغيّر (تصحيح اسم) فبيتحدّث PK وكل FKs اللي بتشاور عليه. (3) توأم بنفس الاسم تحت نفس الموظف: القيد بيرفض. لازم partial key أفضل (DependentNo).</p></div>
+
+<h2 id="f">6) مثال كامل: متجر إلكتروني (من الفكرة للـ SQL و EF Core)</h2>
+<p><b>المتطلبات:</b> العميل بيعمل طلبات (ممكن عميل جديد من غير طلبات)، كل طلب لازم لعميل. الطلب فيه بنود، كل بند لمنتج واحد بكمية وسعر وقت الشراء. المنتج في فئة واحدة، والفئة فيها منتجات كتير.</p>
+<div class="dg">
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="E-commerce ERD">
+<rect class="bx" x="20" y="30" width="120" height="40"/><text class="hd" x="40" y="55">CUSTOMER</text>
+<path class="dm" d="M240 30L280 50L240 70L200 50Z"/><text class="hd" x="218" y="54">PLACES</text>
+<rect class="bx" x="340" y="30" width="120" height="40"/><text class="hd" x="372" y="55">ORDER</text>
+<path class="ln" d="M140 50H200"/><text class="tx" x="158" y="43">1</text>
+<path class="ln" d="M280 47H340M280 53H340"/><text class="tx" x="304" y="40">N</text>
+<path class="dm" d="M400 118L440 148L400 178L360 148Z"/><path class="dm" d="M400 126L430 148L400 170L370 148Z"/><text class="hd" x="379" y="152">HAS</text>
+<path class="ln" d="M400 70V118"/><text class="tx" x="408" y="100">1</text>
+<path class="ln" d="M397 178V212M403 178V212"/><text class="tx" x="410" y="198">N</text>
+<rect class="bx" x="340" y="212" width="120" height="40"/><rect class="bx" x="345" y="217" width="110" height="30"/><text class="hd" x="352" y="237">ORDER_ITEM</text>
+<path class="dm" d="M540 232L575 212L610 232L575 252Z"/><text class="hd" x="545" y="236">OF</text>
+<path class="ln" d="M460 229H505M460 235H505"/><path class="ln" d="M505 232H540"/><text class="tx" x="498" y="222">N</text>
+<path class="ln" d="M610 232H640"/><text class="tx" x="618" y="224">1</text>
+<rect class="bx" x="640" y="212" width="120" height="40"/><text class="hd" x="665" y="237">PRODUCT</text>
+<path class="dm" d="M700 120L735 145L700 170L665 145Z"/><text class="hd" x="680" y="149">IN</text>
+<rect class="bx" x="640" y="40" width="120" height="40"/><text class="hd" x="662" y="65">CATEGORY</text>
+<path class="ln" d="M700 80V120"/><text class="tx" x="708" y="102">1</text><path class="ln" d="M700 170V212"/><text class="tx" x="708" y="195">N</text>
+<text class="tx" x="20" y="285">ORDER_ITEM = weak (مستطيل مزدوج)، HAS = identifying (معين مزدوج)، الخط المزدوج = total.</text>
+</svg></div>
+<pre><code>CREATE TABLE Customers  (CustomerID INT IDENTITY PRIMARY KEY, Name NVARCHAR(100) NOT NULL,
+                         Email NVARCHAR(256) NOT NULL UNIQUE, Phone NVARCHAR(20));
+CREATE TABLE Categories (CategoryID INT IDENTITY PRIMARY KEY, Name NVARCHAR(80) NOT NULL UNIQUE);
+CREATE TABLE Products   (ProductID INT IDENTITY PRIMARY KEY, Name NVARCHAR(150) NOT NULL,
+                         UnitPrice DECIMAL(10,2) NOT NULL CHECK (UnitPrice &gt;= 0), Stock INT NOT NULL DEFAULT 0 CHECK (Stock &gt;= 0),
+                         CategoryID INT NOT NULL REFERENCES Categories(CategoryID));
+CREATE TABLE Orders     (OrderID INT IDENTITY PRIMARY KEY, OrderDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+                         CustomerID INT NOT NULL REFERENCES Customers(CustomerID));           -- total (NOT NULL)
+CREATE TABLE OrderItems (OrderID INT NOT NULL REFERENCES Orders(OrderID) ON DELETE CASCADE,   -- weak entity
+                         LineNo INT NOT NULL,
+                         ProductID INT NOT NULL REFERENCES Products(ProductID),
+                         Quantity INT NOT NULL CHECK (Quantity &gt; 0),
+                         UnitPrice DECIMAL(10,2) NOT NULL,                                   -- سعر وقت الشراء
+                         PRIMARY KEY (OrderID, LineNo));
+CREATE INDEX IX_Orders_Customer ON Orders(CustomerID);
+CREATE INDEX IX_OrderItems_Product ON OrderItems(ProductID);</code></pre>
+<pre><code>public class Order { public int OrderID { get; set; } public DateTime OrderDate { get; set; }
+    public int CustomerID { get; set; } public Customer Customer { get; set; } = null!; public List&lt;OrderItem&gt; Items { get; set; } = new(); }
+public class OrderItem { public int OrderID { get; set; } public int LineNo { get; set; } public int ProductID { get; set; }
+    public int Quantity { get; set; } public decimal UnitPrice { get; set; } public Order Order { get; set; } = null!; public Product Product { get; set; } = null!; }
+
+modelBuilder.Entity&lt;OrderItem&gt;(i =&gt;
+{
+    i.HasKey(x =&gt; new { x.OrderID, x.LineNo });
+    i.HasOne(x =&gt; x.Order).WithMany(o =&gt; o.Items).HasForeignKey(x =&gt; x.OrderID).OnDelete(DeleteBehavior.Cascade);
+    i.HasOne(x =&gt; x.Product).WithMany().HasForeignKey(x =&gt; x.ProductID).OnDelete(DeleteBehavior.Restrict);
+    i.Property(x =&gt; x.UnitPrice).HasPrecision(10, 2);
+});
+
+// إجمالي طلب (derived attribute): اتحسب ولا تخزنه، أو خزّنه وحدّثه في نفس الـ transaction
+var total = await db.OrderItems.Where(i =&gt; i.OrderID == id).SumAsync(i =&gt; i.Quantity * i.UnitPrice);</code></pre>
+<p><b>قرارات المثال:</b> (1) <code>UnitPrice</code> مكرر في OrderItem لأنه snapshot تاريخي. (2) <code>Orders.CustomerID NOT NULL</code> (total للطلب)، والعميل بلا طلبات مسموح (partial). (3) <code>ON DELETE RESTRICT</code> على المنتج حتى ما نفقدش تاريخ المبيعات. (4) الـ index على الـ FKs. (5) التقارير الكبيرة: لو الاستعلام بيجمع ملايين البنود كل مرة، فكر في تخزين Total مع الحفاظ على consistency.</p>
+
+<h2 id="g">7) خطوات منهجية لتصميم أي ERD (للمشاريع والامتحانات)</h2>
+<ol>
+<li>اقرأ المتطلبات وحدد <b>الأسماء</b> (candidate entities) و<b>الأفعال</b> (relationships).</li>
+<li>لكل اسم اسأل: كيان ولا خاصية؟ (القسم 2 في الجزء 2).</li>
+<li>حدد الخصائص لكل كيان وأنواعها (simple/composite/multi-valued/derived).</li>
+<li>حدد المفاتيح: Candidates ثم PK، وهل في weak entities؟</li>
+<li>ارسم العلاقات وحدد <b>الدرجة</b> (binary/ternary/unary).</li>
+<li>لكل علاقة: <b>Cardinality</b> من الاتجاهين، ثم <b>Participation</b> من كل جانب.</li>
+<li>حلّ الـ M:N بجدول وسيط، وحدد خصائص العلاقة.</li>
+<li>حوّل لجداول: FK في جانب الـ N، NOT NULL حسب الـ total.</li>
+<li>راجع: anomalies؟ تكرار؟ مفاتيح؟ أسماء متسقة؟ احتياجات الأداء (indexes)؟</li>
+<li>اعرضه على أصحاب العمل وعدّله قبل الكتابة.</li>
+</ol>
+
+<h2 id="h">8) كتالوج أخطاء تصميم ERD</h2>
+<div class="tw"><table>
+<tr><th>الخطأ</th><th>العرض</th><th>العلاج</th></tr>
+<tr><td>خلط cardinality و participation</td><td>"الطلب لعميل واحد فهو partial"</td><td>سؤالين منفصلين: كام؟ ولازم ولا لأ؟</td></tr>
+<tr><td>M:N مباشر</td><td>علاقة بين اتنين من غير جدول وسيط</td><td>associative entity</td></tr>
+<tr><td>خاصية علاقة محطوطة في كيان</td><td>Grade في Student</td><td>تروح للجدول الوسيط</td></tr>
+<tr><td>تكرار بيانات</td><td>اسم العميل في الطلب</td><td>FK للكيان</td></tr>
+<tr><td>كيان مفقود</td><td>Department كنص</td><td>كيان مستقل</td></tr>
+<tr><td>Weak entity بلا total participation</td><td>بند طلب يتيم</td><td>NOT NULL + CASCADE</td></tr>
+<tr><td>تسمية غير متسقة</td><td><code>cust_id</code> و <code>CustomerID</code> و <code>custId</code></td><td>اتفاقية واحدة للمشروع</td></tr>
+<tr><td>مشتق مخزّن بدون خطة</td><td>TotalAmount مش مظبوط</td><td>احسبه أو حدّثه transactionally</td></tr>
+<tr><td>تصميم يتجاهل التاريخ</td><td>سعر المنتج بيتغير فتتغير الفواتير القديمة</td><td>snapshot في الـ line</td></tr>
+</table></div>
+
+<h2 id="x">9) تمارين (اضغط لكشف الإجابة)</h2>
+<ol>
+<li>أي من دول Weak: (أ) ROOM في BUILDING، (ب) CUSTOMER، (ج) CHAPTER في BOOK، (د) PRODUCT، (هـ) SEAT في FLIGHT؟</li>
+<li>اكتب PK لـ <code>COMMENT</code> تحت <code>POST</code> لو الـ CommentNo بيبدأ من 1 لكل بوست.</li>
+<li>ليه الـ Dependents ما ينفعش لها علاقة M:N مع Employee في الـ identifying؟</li>
+<li>صحّح: "الخط المزدوج عند EMPLOYEE في HAS_DEPENDENT".</li>
+<li>مصمم حط <code>OrderItems(OrderID, ProductID)</code> كـ PK. المستخدم ضغط "أضف" مرتين على نفس المنتج بملاحظتين مختلفتين. إيه اللي حصل وإيه الحل؟</li>
+<li>صمم weak entity: <code>SEAT</code> داخل <code>THEATER_HALL</code> (مع تحويل لجداول).</li>
+</ol>
+<details><summary>الإجابات</summary><p>(1) أ و ج و هـ. (2) <code>(PostID, CommentNo)</code>. (3) لأن الـ weak لازم يتعرّف بمالك واحد، وM:N معناها أكتر من مالك. (4) الخط المزدوج يتحط عند DEPENDENT (الـ weak) لأنه total، وEMPLOYEE بخط مفرد (partial) مع كتابة 1 و N. (5) المفتاح الأساسي بيرفض الإدخال الثاني (violation). الحل: <code>LineNo</code> في المفتاح <code>(OrderID, LineNo)</code> أو دمج الكمية في السطر الأول بمنطق التطبيق. (6) <code>HALL(HallID PK, Name)</code> و <code>SEAT(HallID FK, SeatNo, SeatType, PK(HallID, SeatNo), FK→HALL ON DELETE CASCADE)</code>.</p></details>
+
+<footer>الجزء 6 والأخير: بنك أسئلة كبير (اختيار متعدد وتحويل ERD لجداول واكتشاف أخطاء) وأسئلة مقابلات وتصحيحات السلايدات ومراجع.</footer>
+</main>
+</body>
+</html>

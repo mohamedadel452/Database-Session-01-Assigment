@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ERD (3/6): الـ Keys بكل أنواعها</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:540px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+details{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 14px;margin:.5em 0}
+summary{cursor:pointer;color:var(--acc);font-weight:700}
+.dg{direction:ltr;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin:.8em 0}
+.dg svg{min-width:680px;width:100%;height:auto;display:block}
+.el{fill:var(--card);stroke:var(--acc);stroke-width:1.6}.e2{fill:var(--okbg);stroke:var(--acc);stroke-width:1.6}.e3{fill:var(--warnbg);stroke:var(--warn);stroke-width:1.6}
+.hd{font:700 13px Consolas,Menlo,monospace;fill:var(--acc)}.tx{font:11.5px Consolas,Menlo,monospace;fill:var(--fg)}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>ERD (الجزء 3 من 6): الـ Keys بكل أنواعها</h1>
+<p class="lead">سلايدات 23 إلى 26. المفاتيح هي أكتر موضوع بيتسأل فيه في المقابلات وأكتر مكان بتتخذ فيه قرارات بتعيش سنين في المشروع. بنمشي من التعريف للقرار العملي (Natural مقابل Surrogate) وللتطبيق في SQL و EF Core.</p>
+<nav><a href="#a">1. ليه Keys</a><a href="#b">2. الأنواع</a><a href="#c">3. مثال تفصيلي</a><a href="#d">4. Primary Key</a><a href="#e">5. Composite</a><a href="#f">6. Foreign Key</a><a href="#g">7. في الـ ERD</a><a href="#h">8. EF Core</a><a href="#x">9. تمارين</a></nav>
+
+<h2 id="a">1) ليه محتاجين Keys؟ (سلايد 24)</h2>
+<p>جدول فيه عميلين اسمهم "Ahmed Ali": مين فيهم اللي اشترى؟ من غير حاجة تميّز كل صف بشكل مضمون، مفيش طريقة تحدد صف بعينه للتعديل أو الحذف أو الربط. <b>الـ Key</b> هو خاصية (أو مجموعة خصائص) قيمتها <b>فريدة لكل instance</b> فبتعرّفه بدون لبس.</p>
+<pre><code>UPDATE Customers SET Phone = '0102' WHERE Name = 'Ahmed Ali';      -- عدّل عميلين!
+UPDATE Customers SET Phone = '0102' WHERE CustomerId = 1;          -- عدّل واحد بالظبط</code></pre>
+<p>والـ keys كمان هي الأساس اللي بنربط بيه الجداول (Foreign Keys)، فبدونها مفيش علاقات.</p>
+
+<h2 id="b">2) الأنواع وعلاقتها ببعض (سلايد 25 و 26)</h2>
+<div class="dg">
+<svg viewBox="0 0 700 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Key hierarchy">
+<ellipse class="el" cx="350" cy="135" rx="335" ry="120"/><text class="hd" x="30" y="35">Super Keys (أي مجموعة تعرّف بشكل فريد، حتى لو فيها زيادة)</text>
+<ellipse class="e2" cx="345" cy="150" rx="250" ry="85"/><text class="hd" x="215" y="100">Candidate Keys (Super Key أصغر حجم ممكن)</text>
+<ellipse class="e3" cx="235" cy="160" rx="90" ry="40"/><text class="hd" x="200" y="150">Primary Key</text><text class="tx" x="196" y="170">EmployeeID (واحد بس)</text>
+<ellipse class="el" cx="455" cy="160" rx="100" ry="40"/><text class="hd" x="405" y="150">Alternate Keys</text><text class="tx" x="400" y="170">Email, NationalID</text>
+<text class="tx" x="45" y="230">{EmployeeID, Name}  {Email, Phone}</text><text class="tx" x="420" y="232">(Super غير minimal)</text>
+</svg></div>
+<div class="tw"><table>
+<tr><th>النوع</th><th>التعريف الدقيق</th><th>مثال (EMPLOYEE)</th></tr>
+<tr><td>Super Key</td><td>أي مجموعة خصائص تضمن التفرّد، وممكن يكون فيها خصائص زيادة</td><td>{EmpID}، {EmpID, Name}، {Email, Phone}</td></tr>
+<tr><td>Candidate Key</td><td>Super Key <b>minimal</b>: لو شلت أي خاصية منها تفقد التفرّد</td><td>{EmpID}، {Email}، {NationalID}</td></tr>
+<tr><td>Primary Key</td><td>الـ Candidate اللي اخترته ليعرّف الكيان (واحد فقط، NOT NULL)</td><td>EmpID</td></tr>
+<tr><td>Alternate Key</td><td>باقي الـ Candidates اللي ما اتختارتش (بتتنفذ UNIQUE)</td><td>Email، NationalID</td></tr>
+<tr><td>Composite Key</td><td>Key من خاصيتين أو أكتر مع بعض</td><td>(OrderID, ProductID)</td></tr>
+<tr><td>Foreign Key</td><td>خاصية تشاور على Key (PK أو Unique) في كيان آخر وتحقق الـ referential integrity</td><td>ORDER_ITEM.OrderID يشاور على ORDER.OrderID</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">أخطاء المفاهيم الأشهر:</b></p>
+<ol>
+<li>"Super Key هو الـ Primary Key": لأ، الـ PK نوع واحد مختار من اللي بعده.</li>
+<li>"كل Super Key هو Candidate": لأ، Candidate لازم يكون minimal. <code>{EmpID, Name}</code> Super لكن مش Candidate لأن <code>{EmpID}</code> كفاية.</li>
+<li>"الـ Key بيتحدد بالنظر للبيانات الموجودة": لأ، المفتاح <b>قاعدة عمل</b> (property of the schema)، مش ملاحظة على الصفوف الحالية. لو الأرقام الحالية فريدة بالصدفة فمش معناه إنها Key.</li>
+<li>"الـ Foreign Key لازم يشاور على PK": القاعدة العامة إنه يشاور على أي Candidate (unique) وفي SQL Server لازم PK أو UNIQUE constraint.</li>
+</ol></div>
+
+<h2 id="c">3) مثال تفصيلي: إزاي تطلّع الـ Keys</h2>
+<div class="tw"><table>
+<tr><th>EmpID</th><th>NationalID</th><th>Email</th><th>Name</th><th>Phone</th></tr>
+<tr><td>1</td><td>29901…</td><td>a@co.com</td><td>Ahmed Ali</td><td>0100</td></tr>
+<tr><td>2</td><td>30002…</td><td>b@co.com</td><td>Ahmed Ali</td><td>0111</td></tr>
+</table></div>
+<ol>
+<li>اسأل بقواعد العمل: إيه الخصائص اللي مضمون إنها فريدة لكل موظف؟ EmpID (نظامنا بيولدها)، NationalID (رقم قومي واحد لكل شخص)، Email (بنفرضه unique). Name لأ (الصف 1 و 2). Phone ممكن يتشارك (مكتب).</li>
+<li><b>Candidate Keys:</b> {EmpID}، {NationalID}، {Email}. وأي مجموعة فيها واحدة منهم + أي حاجة تانية هي Super مش Candidate.</li>
+<li><b>Primary Key:</b> EmpID (سبب الاختيار في القسم 4). <b>Alternate:</b> NationalID و Email.</li>
+<li><b>عدد الـ Super Keys:</b> الجدول فيه 5 خصائص. أي مجموعة فيها EmpID هي Super: 2⁴ = 16. نفس الشيء لـ NationalID (16) ولـ Email (16)، وبنطرح المتكرر (اللي فيها أكتر من واحد). فالعدد الكلي أكبر من 16 وده سبب إننا بنشتغل بالـ Candidate (الأصغر) مش بالـ Super.</li>
+</ol>
+<pre><code>CREATE TABLE Employees (
+    EmpID      INT IDENTITY(1,1) PRIMARY KEY,           -- Primary
+    NationalID CHAR(14)      NOT NULL UNIQUE,           -- Alternate
+    Email      NVARCHAR(256) NOT NULL UNIQUE,           -- Alternate
+    Name       NVARCHAR(100) NOT NULL,
+    Phone      NVARCHAR(20)  NULL
+);</code></pre>
+
+<h2 id="d">4) الـ Primary Key: خصائصه وقرار الاختيار</h2>
+<p>الـ PK الجيد: <b>Unique</b> و <b>NOT NULL</b> و <b>Stable</b> (ما بيتغيرش) و <b>Minimal</b> (أقل عدد أعمدة) و <b>Simple</b> (نوع صغير وسريع المقارنة).</p>
+<h3>Natural Key مقابل Surrogate Key</h3>
+<div class="tw"><table>
+<tr><th></th><th>Natural (من البيانات)</th><th>Surrogate (مولَّد، بلا معنى)</th></tr>
+<tr><td>أمثلة</td><td>Email، رقم قومي، ISBN</td><td><code>INT IDENTITY</code>، <code>GUID</code>، <code>BIGINT</code></td></tr>
+<tr><td>الثبات</td><td>ممكن يتغير (الإيميل)</td><td>ثابت</td></tr>
+<tr><td>الحجم</td><td>نص طويل (بطيء في الـ joins والـ indexes)</td><td>رقم صغير</td></tr>
+<tr><td>الخصوصية</td><td>الرقم القومي في كل FK وURL: تسريب PII</td><td>بلا معنى فمفيش تسريب</td></tr>
+<tr><td>المعنى للمستخدم</td><td>مفهوم</td><td>غير مفهوم</td></tr>
+<tr><td>القاعدة العملية</td><td>خليه <b>Alternate Key (UNIQUE)</b></td><td>الأفضل كـ <b>Primary</b> في أغلب الأنظمة</td></tr>
+</table></div>
+<h3>مشاكل حقيقية في الإنتاج</h3>
+<div class="box warn"><ol>
+<li><b>الإيميل PK:</b> العميل غيّر إيميله فلازم تعدّل كل الجداول اللي بتشاور عليه، أو تفقد الربط.</li>
+<li><b>أرقام تسلسلية في الـ URL:</b> <code>/orders/1042</code> بتخلي أي مستخدم يجرب 1043 (IDOR/enumeration). الحل: تحقق من الصلاحية دايماً، وممكن تعرض معرّف عام (GUID) منفصل عن الـ PK الداخلي.</li>
+<li><b>GUID عشوائي كـ clustered PK:</b> كل insert بيروح لمكان عشوائي في الـ index فبتتشقق الصفحات (page splits) ويكبر حجم الـ index ويبطّأ. الحل: GUID متسلسل (<code>NEWSEQUENTIALID()</code> أو <code>Guid.CreateVersion7()</code> في .NET 9 فما فوق، راجع التوثيق) أو BIGINT.</li>
+<li><b>INT بيخلص:</b> الحد حوالي 2.1 مليار. جداول الـ logs والـ events الكبيرة محتاجة <code>BIGINT</code> من الأول لأن تغيير نوع PK بعدين مؤلم.</li>
+<li><b>فجوات في الـ IDENTITY:</b> rollback أو restart بيسيب فجوات. الـ PK مش مفروض يكون "رقم متسلسل بلا فجوات" للمحاسبة، لو محتاج ترقيم فواتير بلا فجوات استخدم عمود مستقل بمنطق خاص.</li>
+</ol></div>
+
+<h2 id="e">5) Composite Key (سلايد 26)</h2>
+<p>لما التفرّد بييجي من اتحاد خاصيتين، زي <code>(OrderID, ProductID)</code> في ORDER_ITEM: الطلب الواحد ممكن يحتوي منتجات كتير، والمنتج في طلبات كتير، لكن التركيبة مرة واحدة.</p>
+<pre><code>CREATE TABLE OrderItems (
+    OrderID   INT NOT NULL REFERENCES Orders(OrderID),
+    ProductID INT NOT NULL REFERENCES Products(ProductID),
+    Quantity  INT NOT NULL CHECK (Quantity &gt; 0),
+    UnitPrice DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (OrderID, ProductID)
+);</code></pre>
+<div class="tw"><table>
+<tr><th>Composite PK</th><th>Surrogate PK + Unique على التركيبة</th></tr>
+<tr><td>يمنع التكرار تلقائياً ومفيش عمود زيادة</td><td>عمود Id بسيط ويسهّل الـ FK من جداول تانية</td></tr>
+<tr><td>أي جدول ابن لازم ينقل أعمدة المفتاح كلها</td><td>FK بعمود واحد</td></tr>
+<tr><td>EF Core: <code>HasKey(x =&gt; new { x.OrderID, x.ProductID })</code></td><td>أبسط في الـ API (<code>/items/5</code>)</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">فخ واقعي:</b> لو العميل يقدر يضيف <b>نفس المنتج مرتين</b> كسطرين منفصلين (بأسعار أو ملاحظات مختلفة)، المفتاح <code>(OrderID, ProductID)</code> هيرفض. محتاج ساعتها <code>LineNo</code> كجزء من المفتاح، أو surrogate key. ودي فكرة "المفتاح الجزئي" في الـ weak entity (الجزء 5). كمان ترتيب الأعمدة في الـ composite index مهم: <code>(OrderID, ProductID)</code> يخدم البحث بـ OrderID لكن مش بـ ProductID لوحده.</p></div>
+
+<h2 id="f">6) الـ Foreign Key والـ Referential Integrity</h2>
+<p>الـ FK قاعدة بتقول: "القيمة دي لازم تكون موجودة في الجدول التاني (أو NULL لو مسموح)". وبتحمي من الـ <b>orphan rows</b>:</p>
+<pre><code>-- من غير FK
+DELETE FROM Customers WHERE CustomerID = 1;     -- الطلبات لسه بتشاور على عميل مش موجود → تقارير غلط
+
+-- مع FK
+ALTER TABLE Orders ADD CONSTRAINT FK_Orders_Customers
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE NO ACTION;
+-- الحذف بيفشل طالما فيه طلبات (قرار واعي)</code></pre>
+<div class="tw"><table>
+<tr><th>ON DELETE</th><th>بيعمل إيه</th><th>إمتى</th></tr>
+<tr><td><code>NO ACTION / RESTRICT</code></td><td>يرفض الحذف لو فيه أبناء</td><td>الافتراضي الآمن، لعميل عنده طلبات</td></tr>
+<tr><td><code>CASCADE</code></td><td>يحذف الأبناء معاه</td><td>أبناء ملهمش معنى لوحدهم (OrderItems مع Order)</td></tr>
+<tr><td><code>SET NULL</code></td><td>يخلي FK = NULL</td><td>علاقة اختيارية (مدير اتحذف)</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">مشاكل واقعية:</b> (1) <code>CASCADE</code> على علاقة غلط ممكن يمسح بيانات مهمة بحذف واحد، وSQL Server بيرفض تعدد مسارات الـ cascade وبيطلب تحدد يدوياً. (2) <b>SQL Server ما بيعملش index تلقائي على أعمدة الـ FK</b>، فالـ join والحذف على الجدول الأب بيعملوا scan لو نسيت index (EF Core بيضيفه تلقائياً). (3) FK يقبل NULL = علاقة اختيارية (partial participation). FK مع NOT NULL = إجبارية (total).</p></div>
+<p><b>Soft delete:</b> في الأنظمة المالية غالباً ما بنحذفش فعلياً، بنستخدم <code>IsDeleted</code> أو <code>DeletedAt</code>. وده معناه أي unique constraint لازم يراعي ده (filtered index) وإلا مش هتقدر تعيد استخدام نفس الإيميل.</p>
+
+<h2 id="g">7) الـ Keys في رسم الـ ERD</h2>
+<ul>
+<li>الـ key attribute بيتحط <b>تحته خط</b> (سلايد 24). والـ composite key: كل الخصائص المشتركة فيه تحتها خط.</li>
+<li>الـ partial key (في weak entity) <b>خط متقطع</b>.</li>
+<li>في Crow's Foot بيتكتب <code>PK</code> و <code>FK</code> جنب العمود (زي سلايد 14).</li>
+</ul>
+<div class="box warn"><p><b class="t">ملاحظة على السلايدات:</b> سلايد 14 بيعرض FK كمكوّن في الـ ERD. في Chen الكلاسيكي <b>الـ FK مش بيتحط كخاصية</b>، العلاقة (المعين) هي اللي بتعبّر عن الارتباط، والـ FK بيظهر لما تحول الـ ERD للـ logical schema. أما في Crow's Foot/أدوات التصميم فبتشوفه كعمود. الاتنين صح بحسب مستوى الرسم.</p></div>
+
+<h2 id="h">8) التطبيق في EF Core</h2>
+<pre><code>public class Employee
+{
+    public int EmpID { get; set; }                       // Primary (اتفاقية Id أو ClassNameId)
+    public string NationalID { get; set; } = "";
+    public string Email { get; set; } = "";
+    public List&lt;OrderItem&gt; Items { get; set; } = new();
+}
+
+modelBuilder.Entity&lt;Employee&gt;(e =&gt;
+{
+    e.HasKey(x =&gt; x.EmpID);
+    e.HasAlternateKey(x =&gt; x.NationalID);               // Alternate: unique + ممكن تكون Principal Key لـ FK
+    e.HasIndex(x =&gt; x.Email).IsUnique();                // unique عادي
+});
+
+modelBuilder.Entity&lt;OrderItem&gt;(i =&gt;
+{
+    i.HasKey(x =&gt; new { x.OrderID, x.ProductID });       // Composite
+    i.HasOne(x =&gt; x.Order).WithMany(o =&gt; o.Items).HasForeignKey(x =&gt; x.OrderID)
+     .OnDelete(DeleteBehavior.Cascade);
+    i.HasOne(x =&gt; x.Product).WithMany().HasForeignKey(x =&gt; x.ProductID)
+     .OnDelete(DeleteBehavior.Restrict);                // مينفعش تمسح منتج اتباع
+});</code></pre>
+
+<h2 id="x">9) تمارين (اضغط لكشف الإجابة)</h2>
+<ol>
+<li>جدول <code>Student(ID, NatID, Email, Name, Phone)</code> وكلهم فريدين ما عدا Name و Phone. اكتب Candidate Keys وPK واحد من عندك وAlternate Keys.</li>
+<li>هل <code>{ID, Name}</code> Candidate Key؟ ولو لأ ليه، وهل هو Super Key؟</li>
+<li>جدول <code>Enrollment(StudentID, CourseID, Semester, Grade)</code>: الطالب ياخد نفس الكورس في ترم مختلف لو رسب. إيه الـ PK؟</li>
+<li>مبرمج اختار الإيميل كـ PK لجدول Users. إيه 3 مشاكل متوقعة؟</li>
+<li>عدد الـ Super Keys في <code>R(A,B,C)</code> لو A هو الـ Candidate الوحيد؟</li>
+<li>موقع بيعرض <code>/invoice/5001</code> لكل فاتورة. إيه المخاطرة؟ وإيه الحل؟</li>
+<li>FK في جدول Orders على <code>ManagerID</code> لموظف قد يكون مفيش، هل NOT NULL؟</li>
+<li>جدول OrderItems له PK <code>(OrderID, ProductID)</code> ومحتاجين نسمح بنفس المنتج مرتين. عدّل التصميم.</li>
+</ol>
+<details><summary>الإجابات</summary><p>(1) Candidates: {ID}، {NatID}، {Email}. PK = ID (الأصغر والأثبت). Alternate = NatID و Email. (2) لأ، مش minimal لأن {ID} لوحدها كفاية، لكنها Super Key. (3) <code>(StudentID, CourseID, Semester)</code> لأن الـ Semester جزء من التفرّد. (4) الإيميل بيتغير وده يكسر FKs، حجمه كبير فيبطّأ الـ joins، ومعلومة حساسة بتتسرب في كل جدول ابن. (5) 4: {A}، {A,B}، {A,C}، {A,B,C}. (6) enumeration/IDOR: أي حد يجرب أرقام. الحل: تحقق صلاحية المالك، ومعرّف عام (GUID) للعرض. (7) لأ، nullable (علاقة اختيارية = partial participation). (8) أضف <code>LineNo</code>: PK = <code>(OrderID, LineNo)</code> مع UNIQUE اختياري على التركيبة لو بدك تمنعه في حالات أخرى، أو surrogate <code>OrderItemID</code>.</p></details>
+
+<footer>الجزء 4: Relationships و Cardinality و Participation وتحويلها لجداول، وفيه تصحيح مهم لسلايد 38. الكود من فهمي ولم أشغله هنا.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ERD (4/6): Relationships و Cardinality و Participation</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:540px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+details{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 14px;margin:.5em 0}
+summary{cursor:pointer;color:var(--acc);font-weight:700}
+.dg{direction:ltr;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin:.8em 0}
+.dg svg{min-width:720px;width:100%;height:auto;display:block}
+.bx{fill:var(--card);stroke:var(--acc);stroke-width:1.5}.dm{fill:var(--card);stroke:#7a4fbf;stroke-width:1.5}.el{fill:var(--card);stroke:var(--acc);stroke-width:1.3}
+.hd{font:700 12.5px Consolas,Menlo,monospace;fill:var(--acc)}.tx{font:12px Consolas,Menlo,monospace;fill:var(--fg)}
+.ln{stroke:var(--fg);stroke-width:1.4;fill:none}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>ERD (الجزء 4 من 6): Relationships و Cardinality و Participation</h1>
+<p class="lead">سلايدات 27 إلى 40. ده قلب الـ ERD: أي علاقة بتتحدد بسؤالين مختلفين ("كام؟" و"لازم ولا اختياري؟")، وكتير بيخلطوا بينهم. وفيه تصحيح مهم لسلايد 38.</p>
+<nav><a href="#a">1. Relationship</a><a href="#b">2. الدرجة</a><a href="#c">3. Cardinality</a><a href="#d">4. Participation</a><a href="#e">5. الفرق</a><a href="#f">6. التحويل لجداول</a><a href="#g">7. مشاكل</a><a href="#x">8. تمارين</a></nav>
+
+<h2 id="a">1) الـ Relationship (سلايد 27 إلى 29)</h2>
+<p><b>التعريف:</b> ارتباط بين كيانين أو أكتر، بيتمثل بمعين (Diamond) واسمه <b>فعل</b> بيعبّر عن الحدث: STUDENT <b>ENROLLS IN</b> COURSE. الاسم بيتقرأ في اتجاه، وبيتعاكس في الاتجاه التاني (COURSE <b>HAS</b> STUDENTS). لو الكيان بيشارك أكتر من مرة في نفس العلاقة (recursive) بنحط <b>role names</b>: EMPLOYEE (manager) و EMPLOYEE (subordinate).</p>
+<div class="dg">
+<svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sample ERD">
+<rect class="bx" x="20" y="40" width="130" height="40"/><text class="hd" x="35" y="65">DEPARTMENT</text>
+<path class="dm" d="M270 30L325 60L270 90L215 60Z"/><text class="hd" x="247" y="65">HAS</text>
+<rect class="bx" x="390" y="40" width="130" height="40"/><text class="hd" x="412" y="65">EMPLOYEE</text>
+<path class="ln" d="M150 60H215"/><text class="tx" x="170" y="52">1</text>
+<path class="ln" d="M325 57H390M325 63H390"/><text class="tx" x="352" y="50">N</text>
+<path class="dm" d="M455 140L505 170L455 200L405 170Z"/><text class="hd" x="418" y="175">MANAGES</text>
+<path class="ln" d="M455 80V140"/><text class="tx" x="462" y="115">1</text>
+<path class="ln" d="M505 170H560V60H520"/><text class="tx" x="566" y="120">N</text>
+<rect class="bx" x="20" y="250" width="130" height="40"/><text class="hd" x="50" y="275">STUDENT</text>
+<path class="dm" d="M275 240L330 270L275 300L220 270Z"/><text class="hd" x="240" y="275">ENROLLS</text>
+<rect class="bx" x="400" y="250" width="130" height="40"/><text class="hd" x="440" y="275">COURSE</text>
+<path class="ln" d="M150 270H220"/><text class="tx" x="175" y="262">M</text>
+<path class="ln" d="M330 270H400"/><text class="tx" x="360" y="262">N</text>
+<ellipse class="el" cx="275" cy="205" rx="40" ry="16"/><text class="tx" x="256" y="209">Grade</text><path class="ln" d="M275 221V240"/>
+<text class="tx" x="590" y="40">══ double: total (إجباري)</text><text class="tx" x="590" y="60">── single: partial (اختياري)</text>
+<text class="tx" x="590" y="85">1 : N  → FK في جانب N</text><text class="tx" x="590" y="105">M : N  → جدول وسيط</text>
+</svg></div>
+
+<h2 id="b">2) درجة العلاقة (Degree) (سلايد 29 و 30)</h2>
+<div class="tw"><table>
+<tr><th>الدرجة</th><th>عدد الكيانات</th><th>مثال</th><th>تردد الاستخدام</th></tr>
+<tr><td>Unary (Recursive)</td><td>1 (نفسه)</td><td>EMPLOYEE يدير EMPLOYEE</td><td>شائع (مديرين، كتالوج فئات، تعليقات متداخلة)</td></tr>
+<tr><td>Binary</td><td>2</td><td>CUSTOMER يعمل ORDER</td><td>الأغلب جداً (95%)</td></tr>
+<tr><td>Ternary</td><td>3</td><td>SUPPLIER يورّد PRODUCT لـ PROJECT</td><td>نادر لكن مهم</td></tr>
+<tr><td>N-ary</td><td>أكتر من 3</td><td>STUDENT يشارك في COURSE مع INSTRUCTOR في ROOM</td><td>نادر، وغالباً بيتحوّل لكيان</td></tr>
+</table></div>
+<h3>ليه الـ Ternary مش بيتفكك لـ 3 binary؟</h3>
+<p>الحقيقة "المورّد S1 ورّد المنتج P1 للمشروع J1" ثلاثية. لو فكّكتها لثلاث علاقات ثنائية، بتضيع معلومة:</p>
+<div class="tw"><table>
+<tr><th>(S,P): بيورّد</th><th>(P,J): يُستخدم في</th><th>(S,J): بيخدم</th></tr>
+<tr><td>S1-P1، S1-P2</td><td>P1-J1، P2-J2</td><td>S1-J1، S1-J2</td></tr>
+</table></div>
+<p>من الثلاثة جداول ممكن نستنتج "S1 ورّد P2 للمشروع J1" وده <b>مش حقيقي</b> (الحقيقي كان S1-P1-J1 و S1-P2-J2 فقط). فلازم جدول ثلاثي يحفظ التركيبات الفعلية.</p>
+<pre><code>CREATE TABLE Supplies (
+    SupplierID INT REFERENCES Suppliers(SupplierID),
+    ProductID  INT REFERENCES Products(ProductID),
+    ProjectID  INT REFERENCES Projects(ProjectID),
+    Quantity   INT,
+    PRIMARY KEY (SupplierID, ProductID, ProjectID)
+);</code></pre>
+<div class="box warn"><p><b class="t">تنبيه:</b> أحياناً ال ternary بيتحول لكيان ربط له اسم ومفتاح (<code>SupplyRecord</code>) وده أسهل في التطبيق، خصوصاً لو عنده خصائص وتاريخ.</p></div>
+
+<h2 id="c">3) الـ Cardinality (سلايد 31 إلى 35)</h2>
+<p><b>التعريف:</b> أقصى عدد من instances الكيان B ممكن يرتبط بـ instance <b>واحد</b> من A (وبالعكس). بيجاوب على "<b>كام؟</b>".</p>
+<h3>طريقة القراءة (الأهم)</h3>
+<p>اقرأ من كل اتجاه منفصل: "الـ <b>واحد</b> من A مرتبط بكام B؟" ثم "الـ <b>واحد</b> من B مرتبط بكام A؟". النتيجة: (الأول : التاني).</p>
+<div class="tw"><table>
+<tr><th>النوع</th><th>القراءة</th><th>مثال</th><th>الجدول</th></tr>
+<tr><td><b>1:1</b></td><td>شخص واحد له جواز واحد، والجواز لشخص واحد</td><td>PERSON ⟷ PASSPORT</td><td>FK + UNIQUE في أي طرف (أو نفس الـ PK)</td></tr>
+<tr><td><b>1:N</b></td><td>قسم له موظفين كتير، والموظف في قسم واحد</td><td>DEPARTMENT → EMPLOYEE</td><td>FK في جانب الـ N (الموظف)</td></tr>
+<tr><td><b>M:N</b></td><td>طالب في كورسات كتير، وكورس فيه طلاب كتير</td><td>STUDENT ⟷ COURSE</td><td>جدول وسيط بـ FKين</td></tr>
+<tr><td>Recursive 1:N</td><td>مدير له موظفين، والموظف له مدير واحد</td><td>EMPLOYEE ← EMPLOYEE</td><td>FK على نفس الجدول (<code>ManagerID</code> nullable)</td></tr>
+<tr><td>Ternary M:N:P</td><td>تركيبة ثلاثية</td><td>SUPPLIER-PRODUCT-PROJECT</td><td>جدول بـ 3 FKs</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">ملاحظة على جدول سلايد 35:</b> السلايد بيكتب "Parent → Child: 1 و Child → Parent: N" وده بيتقرأ عكس المنطق (الأب → الأبناء المفروض N). الصياغة الأوضح: "<b>الأب الواحد</b> له N أبناء، و<b>الابن الواحد</b> له أب واحد". اتفق على اتجاه القراءة دايماً لأن الغلط هنا بيحط الـ FK في الجدول الغلط.</p></div>
+<h3>التمثيل: ثلاث طرق لنفس المعنى</h3>
+<div class="tw"><table>
+<tr><th>المعنى</th><th>Chen</th><th>Min..Max</th><th>Crow's Foot</th></tr>
+<tr><td>واحد بالظبط</td><td>1 + خط مزدوج</td><td>1..1</td><td>||</td></tr>
+<tr><td>صفر أو واحد</td><td>1 + خط مفرد</td><td>0..1</td><td>○|</td></tr>
+<tr><td>واحد أو أكتر</td><td>N + خط مزدوج</td><td>1..N</td><td>|&lt;</td></tr>
+<tr><td>صفر أو أكتر</td><td>N + خط مفرد</td><td>0..N</td><td>○&lt;</td></tr>
+</table></div>
+
+<h2 id="d">4) الـ Participation (سلايد 36 إلى 40)</h2>
+<p><b>التعريف:</b> هل الـ instance <b>لازم</b> يشارك في العلاقة (الحد الأدنى = 1) ولا <b>ممكن</b> (الحد الأدنى = 0)؟ بيجاوب على "<b>لازم ولا اختياري؟</b>".</p>
+<div class="tw"><table>
+<tr><th>النوع</th><th>الرسم (Chen)</th><th>المعنى</th><th>في الجدول</th></tr>
+<tr><td>Total (Mandatory)</td><td>خط مزدوج ═</td><td>كل instance لازم يشارك (min = 1)</td><td>FK <code>NOT NULL</code> (في جانب الـ N)</td></tr>
+<tr><td>Partial (Optional)</td><td>خط مفرد ─</td><td>ممكن يشارك وممكن لأ (min = 0)</td><td>FK <code>NULL</code> مسموح</td></tr>
+</table></div>
+<ul>
+<li><b>Total على EMPLOYEE في WORKS_FOR:</b> مفيش موظف بلا قسم (<code>DeptID NOT NULL</code>).</li>
+<li><b>Partial على SUPPLIER في SUPPLIES:</b> مورّد ممكن مفيش منتجات عنده لسه.</li>
+</ul>
+
+<h2 id="e">5) الفرق بين Cardinality و Participation + تصحيح سلايد 38</h2>
+<div class="tw"><table>
+<tr><th></th><th>Cardinality</th><th>Participation</th></tr>
+<tr><td>بيجاوب على</td><td>كام (الحد الأقصى)</td><td>لازم ولا لأ (الحد الأدنى)</td></tr>
+<tr><td>القيم</td><td>1 أو N</td><td>0 أو 1 (partial أو total)</td></tr>
+<tr><td>الرسم</td><td>رقم/شوكة غراب</td><td>خط مزدوج/مفرد أو شرطة/دائرة</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">تصحيح مهم (سلايد 38):</b> السلايد بيقول: "Every CUSTOMER must place at least one ORDER (Total)" و"An ORDER belongs to one CUSTOMER (Partial)". ده فيه خطأين: (1) جملة "ORDER belongs to one CUSTOMER" بتتكلم عن <b>cardinality (واحد)</b> مش participation. (2) منطقياً <b>الطلب لازم يكون له عميل</b> (total participation لجانب ORDER، يعني <code>CustomerID NOT NULL</code>)، لكن العميل الجديد <b>ممكن مايكونش عمل طلبات لسه</b> (partial لجانب CUSTOMER). السلايد عكسهم.<br>الصح: <b>CUSTOMER (0..N) ─PLACES─ ORDER (1..1)</b>.</p></div>
+<div class="box warn"><p><b class="t">ملاحظة هندسية:</b> total participation على جانب الـ "1" (كل عميل لازم له طلب واحد على الأقل) <b>مش بيتحقق بالـ FK لوحده</b>، لأن الطلب لازم يعرف العميل أولاً (مشكلة الدجاجة والبيضة). بتحتاج منطق تطبيق أو trigger أو deferred constraint. أما total على جانب الـ "N" (الطلب لازم له عميل) فهو <code>NOT NULL</code> بسيط.</p></div>
+<p><b>مثال سلايد 38 التاني:</b> PRODUCT (partial: ممكن ما يتباعش) و ORDER_ITEM (total: كل صنف لازم يكون لمنتج). ده صح تماماً: <code>ProductID NOT NULL</code> في OrderItems.</p>
+
+<h2 id="f">6) تحويل العلاقات لجداول (القواعد الخمس) مع الكود</h2>
+<h3>1) One-to-Many: FK في جانب الـ N</h3>
+<pre><code>CREATE TABLE Employees (EmpID INT PRIMARY KEY, Name NVARCHAR(100),
+    DeptID INT NOT NULL REFERENCES Departments(DeptID));        -- NOT NULL = total participation
+
+// EF Core
+modelBuilder.Entity&lt;Employee&gt;().HasOne(e =&gt; e.Department).WithMany(d =&gt; d.Employees)
+    .HasForeignKey(e =&gt; e.DeptID).IsRequired();</code></pre>
+<h3>2) One-to-One</h3>
+<pre><code>CREATE TABLE Passports (PassportID INT PRIMARY KEY,
+    PersonID INT NOT NULL UNIQUE REFERENCES Persons(PersonID),  -- UNIQUE هو اللي بيجعلها 1:1
+    Number NVARCHAR(20));
+
+modelBuilder.Entity&lt;Person&gt;().HasOne(p =&gt; p.Passport).WithOne(x =&gt; x.Person).HasForeignKey&lt;Passport&gt;(x =&gt; x.PersonID);</code></pre>
+<p><b>الـ FK يروح فين؟</b> في الجدول اللي <b>مشاركته total</b> (الجواز لازم لشخص، والشخص ممكن من غير جواز). وبدائل: ضمّ الجدولين في واحد، أو استخدام نفس الـ PK (shared primary key). وسّع الجدول لجدولين لما: بيانات اختيارية كبيرة (صورة)، أو صلاحيات مختلفة، أو تحديث بوتيرة مختلفة.</p>
+<h3>3) Many-to-Many: جدول وسيط (Junction / Associative)</h3>
+<pre><code>CREATE TABLE Enrollments (
+    StudentID  INT NOT NULL REFERENCES Students(StudentID),
+    CourseID   INT NOT NULL REFERENCES Courses(CourseID),
+    Grade      DECIMAL(4,2) NULL,                 -- خاصية العلاقة نفسها!
+    EnrolledAt DATE NOT NULL,
+    PRIMARY KEY (StudentID, CourseID));
+
+// EF Core: join entity صريح لأن فيه Grade
+public class Enrollment { public int StudentID { get; set; } public int CourseID { get; set; }
+    public decimal? Grade { get; set; } public Student Student { get; set; } = null!; public Course Course { get; set; } = null!; }
+modelBuilder.Entity&lt;Enrollment&gt;().HasKey(e =&gt; new { e.StudentID, e.CourseID });
+// لو مفيش خصائص للعلاقة: modelBuilder.Entity&lt;Student&gt;().HasMany(s =&gt; s.Courses).WithMany(c =&gt; c.Students);</code></pre>
+<h3>4) Recursive: FK للجدول نفسه</h3>
+<pre><code>CREATE TABLE Employees (EmpID INT PRIMARY KEY, Name NVARCHAR(100),
+    ManagerID INT NULL REFERENCES Employees(EmpID));       -- NULL للمدير الأعلى (partial)
+-- شجرة كاملة: WITH cte AS (...) recursive CTE</code></pre>
+<h3>5) Ternary: جدول بـ 3 FKs (فوق في القسم 2)</h3>
+
+<h2 id="g">7) مشاكل حقيقية متكررة</h2>
+<div class="box warn"><ol>
+<li><b>M:N من غير جدول وسيط:</b> <code>Students.CourseIds = "1,2,3"</code> (مرّ في الجزء 2). مفيش integrity ولا بحث.</li>
+<li><b>الـ FK في الجدول الغلط:</b> <code>Departments.EmployeeID</code> بيسمح لقسم بموظف واحد. اسأل "مين الـ N؟" وحط الـ FK عنده.</li>
+<li><b>الـ 1:1 اللي ملهاش لازمة:</b> تقسيم جدول لـ 2 بدون سبب بيضيف joins. ادمج إلا لو فيه سبب واضح.</li>
+<li><b>نسيان خصائص العلاقة:</b> <code>Grade</code> مش للطالب ولا للكورس، دي للتسجيل. نفس الشيء <code>Quantity</code> في ORDER_ITEM.</li>
+<li><b>M:N المخفية:</b> "الموظف في قسم واحد" لحد ما يظهر موظف بيشتغل في قسمين. اسأل صاحب العمل قبل ما تثبّت 1:N.</li>
+<li><b>التاريخ (Temporal):</b> "الموظف في قسم واحد" لكن عايز تحتفظ بتاريخ النقل: دي بقت <code>EmployeeDepartmentHistory (EmpID, DeptID, From, To)</code>.</li>
+<li><b>Cycle في الـ cascade:</b> علاقتين بين نفس الجدولين بـ cascade بيعملوا مسارات متعددة في SQL Server. حدد <code>Restrict</code> في واحدة.</li>
+</ol></div>
+
+<h2 id="x">8) تمارين (اضغط لكشف الإجابة)</h2>
+<h3>أ) حدد الـ Cardinality</h3>
+<ol>
+<li>مستخدم ← الحسابات البنكية (حساب مشترك مسموح).</li>
+<li>بلد ← عاصمة.</li>
+<li>مؤلف ← كتاب.</li>
+<li>طلب ← شحنة (الطلب بيتقسم لشحنات، والشحنة لطلب واحد).</li>
+<li>مستخدم ← صورة البروفايل الحالية.</li>
+<li>مقال ← وسوم (tags).</li>
+</ol>
+<details><summary>الإجابات</summary><p>(1) M:N (حساب مشترك). (2) 1:1. (3) M:N (مؤلفين مشتركين) أو 1:N لو افترضت مؤلف واحد، والصح تسأل. (4) 1:N. (5) 1:1. (6) M:N عبر جدول <code>ArticleTags</code>.</p></details>
+<h3>ب) حدد الـ Participation</h3>
+<ol start="7">
+<li>Employee في WORKS_FOR مع Department.</li>
+<li>Department في نفس العلاقة (قسم جديد).</li>
+<li>Order في PLACES مع Customer.</li>
+<li>Customer في PLACES مع Order.</li>
+<li>Product في INCLUDES مع OrderItem.</li>
+<li>OrderItem في INCLUDES مع Product.</li>
+</ol>
+<details><summary>الإجابات</summary><p>(7) Total (<code>DeptID NOT NULL</code>). (8) Partial (قسم من غير موظفين ممكن). (9) Total. (10) Partial (عميل جديد). (11) Partial. (12) Total.</p></details>
+<h3>ج) حوّل لجداول</h3>
+<p><b>عيادة:</b> الدكتور له تخصص واحد، التخصص فيه دكاترة كتير. المريض بياخد مواعيد مع دكاترة مختلفين، وكل موعد له تاريخ وملاحظات. اكتب الجداول.</p>
+<details><summary>الحل</summary><pre><code>Specialties(SpecialtyID PK, Name)
+Doctors(DoctorID PK, Name, SpecialtyID FK NOT NULL)                 -- 1:N
+Patients(PatientID PK, Name, Phone)
+Appointments(AppointmentID PK, DoctorID FK, PatientID FK, AppointmentDate, Notes)   -- M:N بين Doctor و Patient
+-- استخدمنا surrogate للـ Appointment لأن نفس المريض ممكن يحجز مع نفس الدكتور أكتر من مرة</code></pre></details>
+<h3>د) اكتشف الغلط</h3>
+<ol start="14">
+<li>"كل Employee بيشتغل في Department واحد، فنحط EmployeeID في جدول Department."</li>
+<li>"العلاقة بين Student و Course 1:N لأن الطالب بياخد كورسات كتير."</li>
+<li>"Participation الـ Order في PLACES partial لأن الطلب بيخص عميل واحد."</li>
+</ol>
+<details><summary>الإجابات</summary><p>(14) غلط: الـ FK في جانب الـ N، يعني DeptID في Employees. (15) ناقص: الكورس كمان فيه طلاب كتير فهي M:N. (16) خلط بين cardinality وparticipation: "عميل واحد" cardinality، والطلب لازم يكون له عميل فهو total.</p></details>
+
+<footer>الجزء 5: Weak Entity بالتفصيل (وتصحيح رسم سلايد 43) وتحويله لجداول، ومثال كامل لمتجر. الكود من فهمي ولم أشغله هنا.</footer>
+</main>
+</body>
+</html>

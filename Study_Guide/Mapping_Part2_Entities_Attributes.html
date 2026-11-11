@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mapping (2/6): تحويل الكيانات والخصائص لجداول</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:520px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+td.l{direction:ltr;text-align:left}
+details{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 14px;margin:.5em 0}
+summary{cursor:pointer;color:var(--acc);font-weight:700}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Mapping (الجزء 2 من 6): تحويل الكيانات والخصائص</h1>
+<p class="lead">سلايدات 9 إلى 18. كل نوع خاصية له قاعدة تحويل، لكن القرار الحقيقي بيجي من فهم "ليه". هنا القواعد مع الكود والبيانات والباگات المتوقعة.</p>
+<nav><a href="#a">1. Simple Entity</a><a href="#b">2. Simple Attr</a><a href="#c">3. Composite</a><a href="#d">4. Derived</a><a href="#e">5. Multivalued</a><a href="#f">6. Complex</a><a href="#g">7. أنواع البيانات</a><a href="#x">8. تمارين</a></nav>
+
+<h2 id="a">1) تحويل الكيان البسيط (سلايد 9 إلى 11)</h2>
+<p><b>القاعدة:</b> Simple entity (مفيش weak ومستقل) يبقى <b>جدول واحد</b>، وكل attribute يبقى عمود، والـ key attribute يبقى PRIMARY KEY.</p>
+<pre><code>-- ERD: EMPLOYEE(EmpID, EmpName, Email, Phone, HireDate)
+CREATE TABLE Employees (
+    EmpID    INT           NOT NULL PRIMARY KEY,
+    EmpName  NVARCHAR(100) NOT NULL,
+    Email    NVARCHAR(256) NOT NULL UNIQUE,
+    Phone    NVARCHAR(20)  NULL,
+    HireDate DATE          NOT NULL
+);
+INSERT INTO Employees VALUES (1,'Ali','ali@example.com','0123456789','2022-01-15'),
+                             (2,'Omar','omar@example.com','0109876543','2022-03-10');</code></pre>
+<p><b>إيه اللي بيحصل فعلياً لما تنفذ CREATE TABLE؟</b> الـ DBMS بيسجل التعريف في system catalog، وبينشئ <b>clustered index</b> على الـ PK (في SQL Server الافتراضي) فالصفوف بتتخزن مرتبة على EmpID، وبينشئ index فريد للـ <code>UNIQUE</code> على Email. ده سبب إن الـ PK أسرع عمود للبحث.</p>
+<h3>ملاحظات السلايد 11 مع الشرح</h3>
+<ul>
+<li>"كل entity جدول، وكل attribute عمود": صح، لكن ممكن كيانين يتدمجوا في جدول واحد (1:1 بسيط) أو كيان يتوزع (vertical partitioning) للأداء.</li>
+<li>"الـ PK يعرّف الصف": ولازم يكون NOT NULL ومستقر.</li>
+<li>"أنواع بيانات مناسبة": القرار ده بيتحدد وقت الـ mapping (جدول القسم 7).</li>
+</ul>
+<div class="box warn"><p><b class="t">أخطاء شائعة في الاسم:</b> جدول اسمه <code>User</code> أو <code>Order</code> أو <code>Group</code> كلها <b>كلمات محجوزة</b> في SQL. هتحتاج تكتبها <code>[Order]</code> في كل استعلام. استخدم أسماء مش محجوزة (<code>Users</code> و <code>Orders</code> و <code>UserGroups</code>)، وده كان مطلوب تطبيقه حتى في الجدول في سلايد 23 (جدول ORDER).</p></div>
+<pre><code>// EF Core: الكلاس نفسه
+public class Employee
+{
+    public int EmpID { get; set; }                 // اتفاقية: Id أو ClassNameId → PK تلقائياً
+    public string EmpName { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string? Phone { get; set; }             // ? = nullable
+    public DateOnly HireDate { get; set; }
+}
+// modelBuilder.Entity&lt;Employee&gt;().HasIndex(e =&gt; e.Email).IsUnique();</code></pre>
+
+<h2 id="b">2) Simple Attribute (سلايد 13)</h2>
+<p><b>القاعدة:</b> عمود واحد بنفس اسم الخاصية. لو هي الـ identifier تبقى PK. (مثال السلايد: STUDENT(StudentID, Name, Email, BirthDate)).</p>
+<p><b>القرار المخفي:</b> هل الخاصية فعلاً simple؟ <code>Name</code> لو هتحتاج الفرز بالـ LastName، فهي composite. و<code>Status</code> لو قيم ثابتة قليلة استخدم <code>TINYINT</code> + <code>CHECK</code> أو جدول lookup.</p>
+<pre><code>CREATE TABLE Orders (OrderID INT PRIMARY KEY, Status TINYINT NOT NULL CHECK (Status IN (0,1,2,3)));   -- 0 New, 1 Paid, ...
+-- أو lookup:  Status → FK لجدول OrderStatuses(StatusID, Name)  (أفضل لو الأسماء بتتغير من الـ UI)</code></pre>
+
+<h2 id="c">3) Composite Attribute (سلايد 14)</h2>
+<p><b>القاعدة:</b> نفصّل لأجزاءه الذرية، وكل جزء عمود: Address → Street, City, ZIP. (ما ينفعش نعمل عمود <code>Address</code> + أعمدة الأجزاء، ده تكرار).</p>
+<pre><code>CREATE TABLE Employees (
+    EmpID INT PRIMARY KEY,
+    Street NVARCHAR(100) NOT NULL, City NVARCHAR(60) NOT NULL, ZIP NVARCHAR(10) NOT NULL);
+SELECT * FROM Employees WHERE City = N'Alexandria';        -- بحث بالمدينة بسهولة وبـ index
+// EF Core: OwnsOne
+modelBuilder.Entity&lt;Employee&gt;().OwnsOne(e =&gt; e.Address);   // أعمدة Address_Street ... في نفس الجدول</code></pre>
+<div class="box warn"><p><b class="t">مشاكل متكررة:</b> (1) عنوان في عمود واحد <code>"10 St., Cairo 11511"</code>: مستحيل تفلتر بالمدينة ولا تتحقق من الـ ZIP. (2) ZIP كـ <code>INT</code>: بتفقد الصفر الأول في دول كتير. (3) تفصيل أكتر من اللازم (Building, Floor, ...) لمجرد التفصيل يعمّق الجدول من غير فايدة، فاتبع احتياج البحث والعرض فعلاً.</p></div>
+
+<h2 id="d">4) Derived Attribute (سلايد 15)</h2>
+<p><b>القاعدة:</b> <b>ما نخزنهاش</b>، نحسبها وقت الحاجة من الأصل (Age من BirthDate). السبب: بتتقادم وبتتضارب مع الأصل (update anomaly).</p>
+<pre><code>-- الصيغة اللي في السلايد "CurrentDate - BirthDate" تقريبية. الحساب الدقيق للعمر:
+CREATE VIEW vw_EmployeeAge AS
+SELECT EmpID, BirthDate,
+       DATEDIFF(YEAR, BirthDate, GETDATE())
+       - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, BirthDate, GETDATE()), BirthDate) &gt; GETDATE() THEN 1 ELSE 0 END AS Age
+FROM Employees;
+-- ملحوظة: DATEDIFF(YEAR,...) بتعد حدود السنين مش السنين الكاملة
+
+// EF Core
+modelBuilder.Entity&lt;Order&gt;().Property(o =&gt; o.LineCount).HasComputedColumnSql("...");   // أو [NotMapped] لو في C# فقط</code></pre>
+<div class="tw"><table>
+<tr><th>الخيار</th><th>إمتى</th><th>التكلفة</th></tr>
+<tr><td>تحسب في الاستعلام / View / خاصية C#</td><td>الافتراضي</td><td>حساب كل قراءة (رخيص عادة)</td></tr>
+<tr><td>Computed column (غير persisted)</td><td>محتاجه في WHERE أو الـ ORDER BY</td><td>يتحسب كل مرة</td></tr>
+<tr><td>Persisted computed column</td><td>مشتق من أعمدة نفس الصف ومحتاج index</td><td>مساحة، والدالة لازم deterministic (مش GETDATE)</td></tr>
+<tr><td>تخزين فعلي (denormalized)</td><td>مشتق من صفوف تانية ومكلف (مجموع الطلب)</td><td>لازم تحافظ على consistency (transaction أو trigger)</td></tr>
+</table></div>
+
+<h2 id="e">5) Multivalued Attribute (سلايد 16)</h2>
+<p><b>القاعدة:</b> جدول منفصل: PK الكيان الأصلي كـ FK + عمود القيمة. والـ PK للجدول الجديد = (FK + القيمة) عادة، لأن نفس الرقم مينفعش يتكرر لنفس الشخص.</p>
+<pre><code>CREATE TABLE Students (StudentID INT PRIMARY KEY, Name NVARCHAR(100) NOT NULL);
+CREATE TABLE StudentPhones (
+    StudentID INT          NOT NULL REFERENCES Students(StudentID) ON DELETE CASCADE,
+    PhoneNo   NVARCHAR(20) NOT NULL,
+    PRIMARY KEY (StudentID, PhoneNo));
+
+SELECT s.StudentID, s.Name, STRING_AGG(p.PhoneNo, ', ') AS Phones          -- SQL Server 2017+
+FROM Students s LEFT JOIN StudentPhones p ON p.StudentID = s.StudentID
+GROUP BY s.StudentID, s.Name;
+
+modelBuilder.Entity&lt;Student&gt;().OwnsMany(s =&gt; s.Phones, p =&gt; { p.ToTable("StudentPhones"); p.HasKey("StudentID","PhoneNo"); });</code></pre>
+<div class="box warn"><p><b class="t">البدائل ومتى تتنازل:</b> (1) عمود JSON (<code>NVARCHAR(MAX)</code> أو <code>ToJson()</code> في EF Core 7+): أسهل في القراءة والكتابة، لكن بلا FK ولا constraints، وبحثه أبطأ. مناسب لو بيانات للعرض فقط. (2) <code>"010,011"</code> في عمود واحد: ممنوع (مفيش integrity ولا index). (3) أعمدة <code>Phone1, Phone2, Phone3</code>: بتحدد سقف وبتكسر الاستعلام لما يظهر الرقم الرابع.</p></div>
+
+<h2 id="f">6) Complex Attribute (سلايد 17 و 18)</h2>
+<p><b>القاعدة (السلايد):</b> جدول منفصل، وأعمدته: PK الكيان + أجزاء الـ composite، والـ PK = كل ده مع بعض. مثال: PERSON_ADDRESS(PersonID, Street, City, ZIP).</p>
+<pre><code>-- حسب السلايد
+CREATE TABLE PersonAddress (PersonID INT NOT NULL REFERENCES Persons(PersonID),
+    Street NVARCHAR(100) NOT NULL, City NVARCHAR(60) NOT NULL, ZIP NVARCHAR(10) NOT NULL,
+    PRIMARY KEY (PersonID, Street, City, ZIP));</code></pre>
+<div class="box warn"><p><b class="t">نقد التصميم:</b> PK من 4 أعمدة نصية: ثقيل في الـ index، وأي تصحيح في عنوان (Street) = تعديل في PK ولو في جداول بتشاور عليه يتكسر. وكمان بيسمح بنفس العنوان لنفس الشخص بصيغة مختلفة قليلاً. <b>الأفضل في الواقع:</b> surrogate key + قيد على "العنوان الحالي".</p></div>
+<pre><code>CREATE TABLE PersonAddresses (
+    AddressID INT IDENTITY PRIMARY KEY,
+    PersonID  INT NOT NULL REFERENCES Persons(PersonID),
+    Street NVARCHAR(100) NOT NULL, City NVARCHAR(60) NOT NULL, ZIP NVARCHAR(10) NOT NULL,
+    IsCurrent BIT NOT NULL DEFAULT 0, ValidFrom DATE NOT NULL, ValidTo DATE NULL);
+CREATE UNIQUE INDEX UX_Person_CurrentAddress ON PersonAddresses(PersonID) WHERE IsCurrent = 1;   -- عنوان حالي واحد فقط</code></pre>
+<p>بيانات السلايد 18: Ahmed Ali عنده 3 عناوين (1 و 2)… ده بالظبط سبب الجدول: شخص واحد وعناوين كتير.</p>
+
+<h2 id="g">7) أنواع البيانات: من C# لـ SQL Server</h2>
+<div class="tw"><table>
+<tr><th>C#</th><th>SQL Server</th><th>ملاحظة</th></tr>
+<tr><td class="l">int / long</td><td class="l">INT / BIGINT</td><td>BIGINT للجداول الكبيرة جداً</td></tr>
+<tr><td class="l">string</td><td class="l">NVARCHAR(n)</td><td>اتفاقية EF الافتراضية MAX، حدد الطول</td></tr>
+<tr><td class="l">decimal</td><td class="l">DECIMAL(18,2)</td><td>حدد precision، التحذير الافتراضي مزعج</td></tr>
+<tr><td class="l">DateTime / DateOnly</td><td class="l">DATETIME2 / DATE</td><td>UTC للأحداث</td></tr>
+<tr><td class="l">bool</td><td class="l">BIT</td><td></td></tr>
+<tr><td class="l">Guid</td><td class="l">UNIQUEIDENTIFIER</td><td>انتبه لـ clustered GUID عشوائي</td></tr>
+<tr><td class="l">enum</td><td class="l">INT / TINYINT / NVARCHAR</td><td><code>HasConversion&lt;string&gt;()</code> لو عايز الاسم</td></tr>
+<tr><td class="l">byte[]</td><td class="l">VARBINARY</td><td>الملفات الكبيرة: خزّنها برّه</td></tr>
+</table></div>
+
+<h2 id="x">8) تمارين (اضغط لكشف الإجابة)</h2>
+<h3>أ) حوّل</h3>
+<ol>
+<li>BOOK(<u>ISBN</u>, Title, Authors{multi}, Publisher{composite: Name, City}, Pages, Edition).</li>
+<li>CUSTOMER(<u>ID</u>, FullName, BirthDate, Age{derived}, Emails{multi}, Addresses{complex: Street, City, ZIP}).</li>
+<li>PRODUCT(<u>SKU</u>, Name, Price, Tags{multi}, InStock{derived من الحركة}).</li>
+</ol>
+<details><summary>الحل المقترح</summary><pre><code>-- 1
+Books(ISBN PK, Title, Pages, Edition, PublisherName, PublisherCity)
+BookAuthors(ISBN FK, AuthorName, PK(ISBN, AuthorName))   -- أو كيان Author + M:N لو المؤلف ليه بيانات
+-- 2
+Customers(ID PK, FullName, BirthDate)                      -- Age تتحسب
+CustomerEmails(ID FK, Email, PK(ID, Email))
+CustomerAddresses(AddressID PK, ID FK, Street, City, ZIP)
+-- 3
+Products(SKU PK, Name, Price)  ProductTags(SKU FK, Tag, PK(SKU, Tag))   -- InStock: view من StockMovements</code></pre></details>
+<h3>ب) أسئلة</h3>
+<ol start="4">
+<li>ليه ما نخزنش Age؟ وإيه استثناء ممكن؟</li>
+<li>جدول StudentPhones بدون PK، ما المشكلة؟</li>
+<li>تفتكر تعمل Address كعمود واحد نصي ولا composite؟ ومتى تعمله كيان؟</li>
+<li>جدول اسمه <code>Order</code> بيدي error. ليه؟</li>
+<li>إيه الفرق بين composite و complex attribute في التحويل؟</li>
+</ol>
+<details><summary>الإجابات</summary><p>(4) لأنها بتتقادم وتتضارب مع BirthDate. الاستثناء: لقطة تاريخية في وقت معين (سن وقت الطلب) تتخزن مقصودة. (5) نفس الرقم ممكن يتكرر لنفس الطالب وبلا integrity، فلازم PK مركب (StudentID, PhoneNo). (6) composite لو عنوان واحد بحث بأجزاءه، وكيان لو عدة عناوين أو تاريخ أو استخدامات (شحن/فوترة). (7) Order كلمة محجوزة، استخدم Orders أو [Order]. (8) composite → أعمدة في نفس الجدول؛ complex (composite + multi-valued) → جدول منفصل بأعمدة الأجزاء.</p></details>
+
+<footer>الجزء 3: قرارات التصميم الأساسية: الـ PK و FK والتسمية والـ indexes (سلايد 19 إلى 23) مع تصحيحات. الكود من فهمي ولم أشغله هنا.</footer>
+</main>
+</body>
+</html>

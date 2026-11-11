@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ERD (2/6): Entity و Attributes بكل أنواعها</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:540px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+details{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 14px;margin:.5em 0}
+summary{cursor:pointer;color:var(--acc);font-weight:700}
+.dg{direction:ltr;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin:.8em 0}
+.dg svg{min-width:720px;width:100%;height:auto;display:block}
+.bx{fill:var(--card);stroke:var(--acc);stroke-width:1.5}.el{fill:var(--card);stroke:var(--acc);stroke-width:1.3}.dsh{stroke-dasharray:5 3}
+.hd{font:700 12.5px Consolas,Menlo,monospace;fill:var(--acc)}.tx{font:11.5px Consolas,Menlo,monospace;fill:var(--fg)}.u{text-decoration:underline}
+.ln{stroke:var(--fg);stroke-width:1.2;fill:none}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>ERD (الجزء 2 من 6): Entity و Attributes بكل أنواعها</h1>
+<p class="lead">سلايدات 16 إلى 22. هنا بتتعلم تقرر "ده كيان ولا خاصية"، وكل نوع خاصية بيتحول لإيه في SQL و EF Core، والأخطاء اللي بتتكرر في المشاريع. الإجابات في آخر القسم مخبّية: اضغط للكشف بعد ما تجاوب.</p>
+<nav><a href="#a">1. Entity</a><a href="#b">2. Entity ولا Attribute</a><a href="#c">3. Attributes</a><a href="#d">4. الأنواع</a><a href="#e">5. أنواع البيانات</a><a href="#f">6. جدول التحويل</a><a href="#x">7. تمارين</a></nav>
+
+<h2 id="a">1) الـ Entity (سلايد 16 إلى 18)</h2>
+<p><b>التعريف:</b> كيان من العالم الحقيقي (شخص، شيء، حدث، مفهوم) ليه وجود مستقل ومميّز عن غيره، ومحتاجين نخزن عنه بيانات. بيتمثل بمستطيل واسمه <b>مفرد</b> (CUSTOMER مش CUSTOMERS).</p>
+<h3>مصطلحات بتتلخبط</h3>
+<div class="tw"><table>
+<tr><th>المصطلح</th><th>معناه</th><th>مثال</th><th>في SQL</th></tr>
+<tr><td>Entity Type</td><td>القالب (النوع)</td><td>CUSTOMER</td><td>تعريف الجدول</td></tr>
+<tr><td>Entity Instance</td><td>فرد واحد</td><td>العميل Ahmed (id=1)</td><td>صف (row)</td></tr>
+<tr><td>Entity Set</td><td>مجموعة الأفراد الحالية</td><td>كل العملاء المسجلين</td><td>محتوى الجدول</td></tr>
+</table></div>
+<p><b>ليه الاسم مفرد؟</b> لأن الكيان بيمثل <b>نوعاً</b> واحداً (العميل كمفهوم)، والاسم الجمع بيخص المجموعة. في تسمية جداول SQL فيه مدرستين (<code>Customer</code> أو <code>Customers</code>). الأهم الاتساق. و EF Core بيسمي الجدول بجمع اسم الـ DbSet (<code>DbSet&lt;Customer&gt; Customers</code>) افتراضياً.</p>
+<h3>Strong و Weak (مقدمة سلايد 18)</h3>
+<ul>
+<li><b>Strong:</b> ليه Primary Key خاص يعرّفه (Customer، Product).</li>
+<li><b>Weak:</b> مفيهوش key كامل، بيتعرّف بمفتاح مالكه + مفتاح جزئي (OrderItem، Dependent). شرحه التفصيلي في الجزء 5.</li>
+</ul>
+<h3>أخطاء شائعة في اكتشاف الكيانات</h3>
+<div class="box warn"><ol>
+<li><b>الكيان العملاق (God Entity):</b> جدول <code>Data</code> أو <code>Info</code> فيه 80 عمود لكل حاجة. ده نفس مشكلة الـ anomalies في الجزء 1.</li>
+<li><b>كيان بدون بيانات:</b> لو الكيان مالوش أي خصائص غير الاسم فغالباً هو قيمة (يبقى خاصية أو lookup).</li>
+<li><b>نسيان كيان الحدث:</b> "حجز" أو "دفعة" أو "تسجيل" بتبقى كيانات مهمة (Booking، Payment، Enrollment) لأن ليها تاريخ وحالة وبيانات خاصة بيها.</li>
+<li><b>خلط الكيان بالدور:</b> Teacher و Student وهما أشخاص. الأفضل غالباً <code>Person</code> + role أو جدولين بحسب اختلاف الخصائص.</li>
+</ol></div>
+
+<h2 id="b">2) كيان ولا خاصية؟ قاعدة القرار</h2>
+<p>اسأل 3 أسئلة: (1) هل ليه <b>خصائص خاصة بيه</b>؟ (2) هل ممكن <b>يتكرر</b> أو يرتبط بأكتر من حاجة؟ (3) هل محتاج أبحث أو أصنّف بيه وأحافظ على قيمه موحدة؟ لو الإجابة نعم فهو كيان.</p>
+<div class="tw"><table>
+<tr><th>الشيء</th><th>القرار</th><th>السبب</th></tr>
+<tr><td>Customer.Phone (رقم واحد)</td><td>Attribute</td><td>قيمة بسيطة بلا خصائص.</td></tr>
+<tr><td>Customer.Phones (أكتر من رقم)</td><td>Multi-valued ثم كيان في الجدول</td><td>بيتكرر.</td></tr>
+<tr><td>Department لـ Employee</td><td><b>Entity</b></td><td>ليه اسم ومدير وميزانية، وعدة موظفين يشاركوه. (سلايد 43 حطه Attribute، وده تبسيط تعليمي.)</td></tr>
+<tr><td>Order.Status ("New", "Paid")</td><td>Attribute (enum) أو Lookup</td><td>enum لو ثابتة، وجدول <code>OrderStatus</code> لو الإدارة بتضيف حالات من الشاشة.</td></tr>
+<tr><td>Address</td><td>Composite أو Entity</td><td>Composite لو عنوان واحد، وكيان لو عدة عناوين أو بتتاريخ.</td></tr>
+<tr><td>Category للمنتج</td><td>Entity</td><td>بتتكرر ولها اسم ووصف وشجرة محتملة.</td></tr>
+<tr><td>Color للمنتج</td><td>حسب الحالة</td><td>نص بسيط لو غرضه عرض، وكيان لو هتفلتر وتحسب مخزون لكل لون.</td></tr>
+</table></div>
+
+<h2 id="c">3) الـ Attribute (سلايد 19 و 20)</h2>
+<p><b>التعريف:</b> معلومة بتوصف الكيان. بتتمثل ببيضاوي متصل بالكيان بخط. كل خاصية ليها <b>Domain</b> (نطاق القيم المسموحة): Age بين 0 و 150، Email نص بصيغة معينة، Status من قائمة ثابتة. والـ domain هو اللي بيتحول لـ <code>CHECK</code> و data type و <code>NOT NULL</code>.</p>
+<div class="dg">
+<svg viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Attribute types">
+<rect class="bx" x="330" y="105" width="140" height="40" rx="3"/><text class="hd" x="368" y="130">EMPLOYEE</text>
+<ellipse class="el" cx="215" cy="35" rx="55" ry="20"/><text class="tx u" x="190" y="39">EmpID</text><path class="ln" d="M330 108L255 50"/>
+<ellipse class="el" cx="570" cy="45" rx="55" ry="20"/><text class="tx" x="548" y="49">Salary</text><path class="ln" d="M470 108L535 60"/>
+<ellipse class="el dsh" cx="400" cy="215" rx="48" ry="19"/><text class="tx" x="385" y="219">Age</text><path class="ln dsh" d="M400 145V196"/>
+<ellipse class="el" cx="590" cy="195" rx="58" ry="21"/><ellipse class="el" cx="590" cy="195" rx="52" ry="16"/><text class="tx" x="565" y="199">Phones</text><path class="ln" d="M470 140L540 182"/>
+<ellipse class="el" cx="110" cy="115" rx="58" ry="20"/><text class="tx" x="82" y="119">Address</text><path class="ln" d="M330 125H168"/>
+<ellipse class="el" cx="45" cy="195" rx="40" ry="16"/><text class="tx" x="28" y="199">Street</text><ellipse class="el" cx="125" cy="220" rx="32" ry="15"/><text class="tx" x="113" y="224">City</text><ellipse class="el" cx="205" cy="195" rx="32" ry="15"/><text class="tx" x="196" y="199">Zip</text>
+<path class="ln" d="M90 133L55 180"/><path class="ln" d="M110 135L122 205"/><path class="ln" d="M130 133L195 182"/>
+<text class="tx" x="660" y="40">Key: underlined</text><text class="tx" x="660" y="58">Simple: oval</text><text class="tx" x="640" y="190">Multi-valued: double oval</text><text class="tx" x="440" y="238">Derived: dashed oval</text><text class="tx" x="20" y="245">Composite: oval with children</text>
+</svg></div>
+
+<h2 id="d">4) أنواع الـ Attributes (سلايد 21 و 22) مع التحويل والمشاكل</h2>
+<h3>1) Simple (Atomic)</h3>
+<p>مينفعش يتقسم لأجزاء ذات معنى: Age، Salary، OrderDate. بتتحول لعمود واحد. <b>السؤال الأهم:</b> هل فعلاً بسيط؟ <code>FullName</code> هل هتحتاج تفرز بالاسم الأخير أو تبحث بالأول؟ لو آه اجعله composite (FirstName و LastName). وفي ثقافات كتير الاسم مش بيتقسم بسهولة، فاقرر حسب احتياج النظام.</p>
+<h3>2) Composite</h3>
+<p>بيتقسم لأجزاء ليها معنى: Address = Street + City + Zip. في الجدول بتبقى <b>أعمدة منفصلة</b> (مش عمود نص واحد)، لتقدر تفلتر بالمدينة.</p>
+<pre><code>public class Customer
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public Address ShippingAddress { get; set; } = new();     // composite
+}
+[Owned] public class Address { public string Street { get; set; } = ""; public string City { get; set; } = ""; public string Zip { get; set; } = ""; }
+
+// أو بالـ Fluent API:  modelBuilder.Entity&lt;Customer&gt;().OwnsOne(c =&gt; c.ShippingAddress);
+// النتيجة: أعمدة ShippingAddress_Street و ShippingAddress_City و ShippingAddress_Zip في جدول Customers</code></pre>
+<h3>3) Multi-valued</h3>
+<p>بتشيل أكتر من قيمة: Phones، Skills. <b>ممنوع</b> تخزنها في عمود واحد <code>"010,011"</code>. التحويل: <b>جدول منفصل</b> بـ FK للكيان.</p>
+<pre><code>CREATE TABLE CustomerPhones (
+    CustomerId INT NOT NULL REFERENCES Customers(CustomerId) ON DELETE CASCADE,
+    Phone      NVARCHAR(20) NOT NULL,
+    PRIMARY KEY (CustomerId, Phone)          -- نفس الرقم مينفعش يتكرر لنفس العميل
+);
+
+public class Customer { public int Id { get; set; } public List&lt;CustomerPhone&gt; Phones { get; set; } = new(); }
+public class CustomerPhone { public int CustomerId { get; set; } public string Phone { get; set; } = ""; }</code></pre>
+<div class="box warn"><p><b class="t">مشكلة حقيقية:</b> بيانات مخزنة <code>"C#,SQL"</code> بتخليك تعمل <code>WHERE Skills LIKE '%C#%'</code> وده بيلاقي "C#" لكن كمان "F#,C#-script"، ومفيش index يشتغل (leading wildcard). والحل: جدول، أو في SQL Server 2016+ و EF Core 7/8 ممكن تخزن collection كـ JSON column لو القراءة بس ومش بتفلتر عليها كثير. ده trade-off: JSON أسهل في الكتابة لكن أضعف في الـ constraints والـ joins.</p></div>
+<h3>4) Derived</h3>
+<p>قيمتها تتحسب من خاصية تانية: Age من BirthDate، Total من مجموع الـ items. بتتمثل ببيضاوي متقطع. <b>القاعدة:</b> خزّن الأصل (BirthDate) مش المشتق (Age)، لأن Age بتقدم كل يوم وبتبقى غلط.</p>
+<pre><code>// في C#: خاصية محسوبة مش بتتخزن
+[NotMapped] public int Age =&gt; AgeOn(BirthDate, DateOnly.FromDateTime(DateTime.UtcNow));
+static int AgeOn(DateOnly birth, DateOnly today)
+{
+    var age = today.Year - birth.Year;
+    if (today &lt; birth.AddYears(age)) age--;      // لسه ما عداش عيد ميلاده السنة دي
+    return age;
+}
+
+-- فخ SQL: DATEDIFF بتعد "حدود السنين" مش السنين الكاملة
+SELECT DATEDIFF(YEAR, '2000-12-31', '2001-01-01');   -- 1 رغم إن الفرق يوم واحد</code></pre>
+<div class="box warn"><p><b class="t">TotalAmount في ORDER (سلايد 11 و 33):</b> هي مشتقة (مجموع Quantity × UnitPrice). تخزينها بيسرّع التقارير لكنها بتخلق خطر تضارب (الأصناف اتغيرت والمجموع لا). الخيارات: (1) ما تخزنهاش واحسبها بـ <code>SUM</code>، (2) خزّنها وحدّثها في نفس الـ transaction دايماً، (3) computed column/view لو مجموعة داخل نفس الصف. في المقابلات اذكر إنك فاهم التبادل (consistency مقابل سرعة القراءة).</p></div>
+<h3>5) Complex (Composite + Multi-valued)</h3>
+<p>مثال السلايد: <code>PreviousAddresses</code> (أكتر من عنوان، وكل عنوان فيه Street وCity وZip). التحويل: <b>كيان منفصل</b> بخصائص العنوان + FK + مفتاح.</p>
+<pre><code>CREATE TABLE CustomerAddresses (
+    AddressId  INT IDENTITY PRIMARY KEY,
+    CustomerId INT NOT NULL REFERENCES Customers(CustomerId),
+    Street NVARCHAR(100), City NVARCHAR(60), Zip NVARCHAR(10),
+    IsCurrent BIT NOT NULL DEFAULT 0, ValidFrom DATE, ValidTo DATE
+);</code></pre>
+<h3>6) Key Attribute</h3>
+<p>خاصية (أو أكتر) بتعرّف الكيان بشكل فريد، وبتتحط تحتها خط. شرحها كامل في الجزء 3.</p>
+<h3>Optional و Required</h3>
+<p>كل خاصية إما <code>NOT NULL</code> أو <code>NULL</code>. الـ NULL معناها "غير معروف" مش صفر ولا نص فاضي. وفي C# فعّل <code>&lt;Nullable&gt;enable&lt;/Nullable&gt;</code> عشان <code>string?</code> تطابق عمود NULL. كتر الأعمدة الـ NULL في جدول (sparse) علامة إنك محتاج كيان فرعي أو وراثة.</p>
+
+<h2 id="e">5) نوع البيانات: القرار المخفي في كل Attribute</h2>
+<pre><code>Console.WriteLine(0.1 + 0.2 == 0.3);       // False  (double: تمثيل ثنائي تقريبي)
+Console.WriteLine(0.1m + 0.2m == 0.3m);    // True   (decimal)
+
+var phone = int.Parse("0100123456");        // 100123456 → ضاع الصفر الأول</code></pre>
+<div class="tw"><table>
+<tr><th>الخاصية</th><th>النوع الصح</th><th>الخطأ الشائع ونتيجته</th></tr>
+<tr><td>سعر، رصيد</td><td><code>DECIMAL(18,2)</code> / <code>decimal</code></td><td><code>FLOAT</code>: فروق قروش في الحسابات المالية.</td></tr>
+<tr><td>تليفون</td><td><code>NVARCHAR(20)</code></td><td><code>INT</code>: بيشيل الصفر ومبيقبلش +20.</td></tr>
+<tr><td>تاريخ ووقت حدث</td><td><code>DATETIME2</code> بـ UTC</td><td>تخزين محلي: مشاكل مع المناطق الزمنية.</td></tr>
+<tr><td>تاريخ ميلاد</td><td><code>DATE</code></td><td><code>DATETIME</code> ووقت ملوش لازمة.</td></tr>
+<tr><td>إيميل</td><td><code>NVARCHAR(256)</code> + UNIQUE</td><td>من غير unique: حسابات مكررة. ولاحظ إن المقارنة بتتأثر بالـ collation (حساسية الحروف).</td></tr>
+<tr><td>حالة (Status)</td><td><code>TINYINT</code>/enum أو FK لـ lookup</td><td>نص حر: "Paid" و "paid" و "PAID" كلها موجودة.</td></tr>
+<tr><td>نص طويل</td><td><code>NVARCHAR(MAX)</code> بحذر</td><td>بيمنع الـ index ويبطّأ.</td></tr>
+</table></div>
+
+<h2 id="f">6) جدول ملخص: Attribute إلى الجدول إلى EF Core</h2>
+<div class="tw"><table>
+<tr><th>النوع</th><th>في ERD</th><th>في الجدول</th><th>في EF Core</th></tr>
+<tr><td>Simple</td><td>بيضاوي</td><td>عمود</td><td>property</td></tr>
+<tr><td>Composite</td><td>بيضاوي بأبناء</td><td>أعمدة (واحد لكل جزء)</td><td><code>OwnsOne</code> / <code>[Owned]</code></td></tr>
+<tr><td>Multi-valued</td><td>بيضاوي مزدوج</td><td>جدول منفصل بـ FK</td><td>navigation collection أو <code>OwnsMany</code></td></tr>
+<tr><td>Derived</td><td>بيضاوي متقطع</td><td>غالباً ما بيتخزنش (أو computed column)</td><td><code>[NotMapped]</code> أو <code>HasComputedColumnSql</code></td></tr>
+<tr><td>Complex</td><td>مزدوج بأبناء</td><td>كيان/جدول منفصل</td><td>entity بـ navigation</td></tr>
+<tr><td>Key</td><td>تحته خط</td><td>PRIMARY KEY</td><td><code>[Key]</code> أو <code>HasKey</code></td></tr>
+</table></div>
+
+<h2 id="x">7) تمارين (اضغط لكشف الإجابة)</h2>
+<h3>أ) صنّف الخاصية</h3>
+<ol>
+<li>FullName لموظف في نظام HR بسيط. </li>
+<li>Email المستخدم الوحيد. </li>
+<li>PhoneNumbers للعميل. </li>
+<li>YearsOfService للموظف. </li>
+<li>DeliveryAddress (street, city, zip) في طلب واحد. </li>
+<li>Skills للمبرمج. </li>
+<li>OrderTotal. </li>
+<li>EducationHistory (جهة، سنة، درجة) لكل موظف عدة سجلات. </li>
+</ol>
+<details><summary>الإجابات</summary><p>(1) Simple أو Composite لو محتاج البحث بالجزء. (2) Simple (وكمان Candidate Key لو unique). (3) Multi-valued. (4) Derived من HireDate. (5) Composite. (6) Multi-valued (والأفضل كيان Skill مشترك ومعاه M:N). (7) Derived من الـ items. (8) Complex (composite + multi-valued)، ويتحول لكيان EducationRecord.</p></details>
+<h3>ب) كيان ولا خاصية؟</h3>
+<ol start="9">
+<li>Brand للمنتج في متجر بيفلتر بالبراند ويعرض صفحة لكل براند.</li>
+<li>Gender في نظام عيادة.</li>
+<li>Course في نظام تسجيل جامعي.</li>
+<li>Country في عنوان العميل (200 دولة).</li>
+</ol>
+<details><summary>الإجابات</summary><p>(9) Entity (ليه صفحة وخصائص وهيتكرر). (10) Attribute بقيم محددة (أو lookup صغير). (11) Entity. (12) غالباً Entity/Lookup (Country) لتوحيد الأسماء ومنع الأخطاء الإملائية، أو ISO code كـ attribute لو الاحتياج بسيط.</p></details>
+<h3>ج) صمم الخصائص (جرّب بنفسك)</h3>
+<p>نظام مكتبة: Book و Member. اكتب خصائص كل كيان ونوعها، وحدّد الـ multi-valued والـ derived، وقرر هل Author كيان.</p>
+<details><summary>حل مقترح</summary><p><b>BOOK:</b> <u>ISBN</u> (key)، Title، PublishYear، Pages، CopiesTotal، AvailableCopies (derived من CopiesTotal - الاستعارات الجارية)، Authors (multi-valued ← كيان AUTHOR مع M:N)، Categories (multi-valued ← كيان). <b>MEMBER:</b> <u>MemberId</u>، Name (composite)، Email، Phones (multi-valued)، JoinDate، Age (derived من BirthDate). Author كيان لأنه ليه سيرة وكتب كتير.</p></details>
+<h3>د) اكتشف الخطأ</h3>
+<pre><code>Orders(OrderId, CustomerName, CustomerPhone1, CustomerPhone2, CustomerPhone3, ItemsList, Age)</code></pre>
+<details><summary>الإجابة</summary><p>(1) CustomerName و CustomerPhone في الطلب: تكرار، المفروض كيان Customer. (2) Phone1 و 2 و 3: multi-valued مقلّد بأعمدة، وبيحدد الحد الأقصى بـ 3. (3) ItemsList: قائمة في عمود، المفروض ORDER_ITEM. (4) Age: مشتقة وغير مرتبطة بالطلب أصلاً.</p></details>
+
+<footer>الجزء 3: Keys بكل أنواعها (Super و Candidate و Primary و Alternate و Composite و Foreign) والـ Surrogate مقابل Natural.</footer>
+</main>
+</body>
+</html>

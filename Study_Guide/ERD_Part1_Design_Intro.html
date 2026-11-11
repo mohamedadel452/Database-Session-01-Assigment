@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ERD (1/6): تصميم قواعد البيانات ومدخل الـ ERD</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:520px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+td.l,th.l{direction:ltr;text-align:left;font-family:Consolas,Menlo,monospace;font-size:.88rem}
+.dg{direction:ltr;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin:.8em 0}
+.dg svg{min-width:720px;width:100%;height:auto;display:block}
+.bx{fill:var(--card);stroke:var(--acc);stroke-width:1.5}
+.hd{font:700 12.5px Consolas,Menlo,monospace;fill:var(--acc)}.tx{font:11.5px Consolas,Menlo,monospace;fill:var(--fg)}
+.ln{stroke:var(--fg);stroke-width:1.4;fill:none}.op{fill:none;stroke:var(--fg)}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>ERD (الجزء 1 من 6): تصميم قواعد البيانات ومدخل الـ ERD</h1>
+<p class="lead">سلايدات 3 إلى 15 من Session 01 - ERD. الموضوع ده هو الأساس اللي بيتبني عليه كل Backend: غلطة هنا بتفضل معاك سنين. الأجزاء: 1 التصميم والمدخل، 2 Entity و Attributes، 3 Keys، 4 Relationships و Cardinality و Participation، 5 Weak Entity وتحويل الـ ERD لجداول، 6 بنك أسئلة ومراجع.</p>
+<nav><a href="#a">1. ليه نصمم</a><a href="#b">2. Anomalies</a><a href="#c">3. مراحل التصميم</a><a href="#d">4. من المتطلبات لـ ERD</a><a href="#e">5. المبادئ</a><a href="#f">6. مدخل ERD</a><a href="#q">7. أسئلة</a></nav>
+
+<h2 id="a">1) ليه ممنوع تكتب الجداول مباشرة؟ (سلايد 4 و 8)</h2>
+<p><b>التعريف:</b> تصميم قاعدة البيانات هو عملية رسم "المخطط" للبيانات: إيه اللي هنخزنه، وإزاي مرتب، وإزاي بيرتبط ببعضه، وإيه القواعد اللي بتمنع البيانات الغلط.</p>
+<p><b>التشبيه:</b> بناء عمارة. لو بدأت تبني من غير خريطة هتحتاج تهدم وتعيد لما تلاقي إن السلم مش داخل في أي مكان. وتعديل الجداول بعد ما تتملي بملايين الصفوف أصعب وأغلى بكتير من تعديل رسم على ورقة.</p>
+<h3>إيه اللي بيحصل في الإنتاج لو التصميم ضعيف؟</h3>
+<div class="tw"><table>
+<tr><th>التصميم الضعيف</th><th>النتيجة الواقعية</th></tr>
+<tr><td>أرقام التليفونات في عمود واحد <code>"010,011,012"</code></td><td>مستحيل تبحث بسرعة بالرقم، ولا تعمل index، والـ unique مستحيل.</td></tr>
+<tr><td>مفيش Foreign Key</td><td>طلبات بتشاور على عميل اتمسح (orphan rows)، والتقارير بتديك أرقام غلط.</td></tr>
+<tr><td>اسم العميل مكرر في كل طلب</td><td>العميل بيغير اسمه فتلاقي 3 أشكال له في التقارير.</td></tr>
+<tr><td>كل حاجة في جدول واحد ضخم</td><td>كل استعلام بيقرأ أعمدة ملوش علاقة بيها، وأي تعديل بيعمل lock على الجدول كله.</td></tr>
+<tr><td>مفيش تفكير في الحجم</td><td>جدول مفيهوش index على أكتر عمود بتبحث بيه، فالـ API يبطّأ لما الصفوف تعدي مليون.</td></tr>
+</table></div>
+
+<h2 id="b">2) المشكلة الأساسية: Anomalies (الجدول الواحد الكبير)</h2>
+<p>افترض إنك صممت كل حاجة في جدول واحد:</p>
+<div class="tw"><table>
+<tr><th>OrderId</th><th>CustomerName</th><th>CustomerPhone</th><th>Product</th><th>Price</th></tr>
+<tr><td>1</td><td>Ahmed</td><td>0100</td><td>Mouse</td><td>200</td></tr>
+<tr><td>2</td><td>Ahmed</td><td>0100</td><td>Keyboard</td><td>450</td></tr>
+<tr><td>3</td><td>Mona</td><td>0111</td><td>Mouse</td><td>200</td></tr>
+</table></div>
+<ul>
+<li><b>Update anomaly:</b> Ahmed غيّر رقمه. لازم تعدّل كل صفوفه. لو نسيت صف واحد بقى عندك رقمين لنفس الشخص.</li>
+<li><b>Insert anomaly:</b> عايز تضيف منتج جديد "Monitor" لسه محدش طلبه. مينفعش، لأن الصف محتاج OrderId وعميل.</li>
+<li><b>Delete anomaly:</b> Mona لغت الطلب رقم 3 فمسحته. ضاعت كل بيانات Mona ومعاها إن Mouse بـ 200 (لو ده الصف الوحيد).</li>
+</ul>
+<pre><code>-- الحل بعد التصميم: كل حقيقة في مكان واحد
+CREATE TABLE Customers (CustomerId INT PRIMARY KEY, Name NVARCHAR(100), Phone NVARCHAR(20));
+CREATE TABLE Products  (ProductId  INT PRIMARY KEY, Name NVARCHAR(100), Price DECIMAL(10,2));
+CREATE TABLE Orders    (OrderId INT PRIMARY KEY, CustomerId INT NOT NULL REFERENCES Customers(CustomerId));
+CREATE TABLE OrderItems(OrderId INT REFERENCES Orders(OrderId), ProductId INT REFERENCES Products(ProductId),
+                        Quantity INT NOT NULL, PRIMARY KEY (OrderId, ProductId));
+UPDATE Customers SET Phone = '0102' WHERE CustomerId = 1;   -- تعديل واحد في مكان واحد</code></pre>
+<p>ده معنى "No Redundancy" في سلايد 7. وهو بيمهد لـ Normalization اللي هتدرسه بعد كده، والـ ERD هو الخطوة اللي بتخليك توصل للتقسيم ده بشكل مرئي.</p>
+
+<h2 id="c">3) مراحل التصميم الست (سلايد 5 و 6)</h2>
+<div class="dg">
+<svg viewBox="0 0 800 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Design process">
+<defs><marker id="ar" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path class="op" d="M1 1L10 6L1 11"/></marker></defs>
+<rect class="bx" x="10" y="20" width="115" height="70" rx="5"/><text class="hd" x="18" y="40">1 Requirements</text><text class="tx" x="18" y="58">نجمع المتطلبات</text><text class="tx" x="18" y="74">وقواعد العمل</text>
+<rect class="bx" x="145" y="20" width="115" height="70" rx="5"/><text class="hd" x="153" y="40">2 Conceptual</text><text class="tx" x="153" y="58">ERD (أفكار)</text><text class="tx" x="153" y="74">بدون DBMS</text>
+<rect class="bx" x="280" y="20" width="115" height="70" rx="5"/><text class="hd" x="288" y="40">3 Logical</text><text class="tx" x="288" y="58">جداول وأعمدة</text><text class="tx" x="288" y="74">PK و FK</text>
+<rect class="bx" x="415" y="20" width="115" height="70" rx="5"/><text class="hd" x="423" y="40">4 Refinement</text><text class="tx" x="423" y="58">Normalization</text><text class="tx" x="423" y="74">وإزالة التكرار</text>
+<rect class="bx" x="550" y="20" width="115" height="70" rx="5"/><text class="hd" x="558" y="40">5 Physical</text><text class="tx" x="558" y="58">Indexes ونوع</text><text class="tx" x="558" y="74">البيانات والتخزين</text>
+<rect class="bx" x="685" y="20" width="105" height="70" rx="5"/><text class="hd" x="693" y="40">6 Implement</text><text class="tx" x="693" y="58">إنشاء واختبار</text><text class="tx" x="693" y="74">وترحيل</text>
+<path class="ln" d="M125 55H145" marker-end="url(#ar)"/><path class="ln" d="M260 55H280" marker-end="url(#ar)"/><path class="ln" d="M395 55H415" marker-end="url(#ar)"/><path class="ln" d="M530 55H550" marker-end="url(#ar)"/><path class="ln" d="M665 55H685" marker-end="url(#ar)"/>
+<path class="ln" d="M742 90V150H67V95" marker-end="url(#ar)"/><text class="tx" x="250" y="170">المراجعة والتحسين: التصميم بيتعاد لما المتطلبات تتغير (Iterative)</text>
+</svg></div>
+<div class="tw"><table>
+<tr><th>المستوى</th><th>بيجاوب على</th><th>المخرج</th><th>مثال</th></tr>
+<tr><td>Conceptual</td><td>إيه اللي في عالم العمل؟</td><td>ERD: كيانات وعلاقات</td><td>CUSTOMER يطلب ORDER</td></tr>
+<tr><td>Logical</td><td>إزاي نمثله في النموذج العلائقي؟</td><td>جداول، PK، FK، قيود</td><td><code>Orders(OrderId PK, CustomerId FK)</code></td></tr>
+<tr><td>Physical</td><td>إزاي نخزنه بسرعة على SQL Server؟</td><td>أنواع بيانات، indexes، partitions</td><td><code>INT IDENTITY</code> و index على <code>CustomerId</code></td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">مفهوم خاطئ:</b> "لازم أخلّص التصميم كله بعدين أبدأ كود". في المشاريع الحقيقية (Agile) بتصمم الجزء اللي محتاجه دلوقتي وبتطوره، لكن <b>أي تغيير بعد وجود بيانات حقيقية</b> بيحتاج Migration مدروس. فاستثمر وقت في فهم الكيانات الأساسية قبل البرمجة.</p></div>
+
+<h2 id="d">4) من المتطلبات للـ ERD: تقنية الأسماء والأفعال</h2>
+<p>الخطوة اللي كل المبتدئين بيتوهوا فيها: من أين أبدأ؟ خد وصف المتطلبات وحلله:</p>
+<div class="box"><p><b>نص المتطلبات:</b> "المتجر بيبيع منتجات، وكل منتج له اسم وسعر وكمية في المخزون. العميل بيسجّل بالإيميل ورقم التليفون، وبيقدّر يعمل أكتر من طلب. الطلب فيه تاريخ، وبيحتوي منتج أو أكتر بكمية لكل منتج. كل طلب ليه عنوان شحن."</p></div>
+<div class="tw"><table>
+<tr><th>الأسماء (Nouns)</th><th>تصنيفها</th><th>الأفعال (Verbs)</th><th>العلاقة</th></tr>
+<tr><td>منتج، عميل، طلب</td><td>كيانات (Entities)</td><td>العميل <b>يعمل</b> طلب</td><td>CUSTOMER 1:N ORDER</td></tr>
+<tr><td>اسم، سعر، كمية، إيميل، تليفون، تاريخ</td><td>خصائص (Attributes)</td><td>الطلب <b>يحتوي</b> منتج</td><td>ORDER M:N PRODUCT (يتفكك لـ ORDER_ITEM)</td></tr>
+<tr><td>عنوان شحن</td><td>خاصية مركبة أو كيان جديد؟ (القرار في الجزء 2)</td><td></td><td></td></tr>
+<tr><td>كمية لكل منتج في الطلب</td><td>خاصية للعلاقة (مش المنتج ولا الطلب)</td><td></td><td>تروح لـ ORDER_ITEM</td></tr>
+</table></div>
+<h3>أسئلة لازم تسألها لنفسك أو للعميل لكل علاقة</h3>
+<ol>
+<li>الكيان A ممكن يكون مرتبط بكام B <b>كحد أقصى</b>؟ (Cardinality)</li>
+<li>هل ممكن A يوجد من غير B؟ (Participation: حد أدنى صفر ولا واحد)</li>
+<li>إيه اللي بيعرّف الـ A بشكل فريد؟ (Key)</li>
+<li>هل الـ A ده بيتكرر في الحقيقة، ولا قيمة بسيطة (كيان ولا خاصية)؟</li>
+<li>لو B اتمسح، يحصل إيه لـ A؟ (Cascade/Restrict)</li>
+</ol>
+
+<h2 id="e">5) مبادئ التصميم (سلايد 7) وحدودها</h2>
+<div class="tw"><table>
+<tr><th>المبدأ</th><th>إيه معناه عملياً</th><th>التكلفة / متى تتنازل</th></tr>
+<tr><td>Data Integrity</td><td>PK و FK و NOT NULL و CHECK و UNIQUE</td><td>القيود بتبطّأ الـ bulk insert شوية، لكن أرخص من تنضيف بيانات فاسدة.</td></tr>
+<tr><td>No Redundancy</td><td>كل معلومة في مكان واحد</td><td>الـ joins بتزيد. في الـ reporting والـ read-heavy بنعمل <b>denormalization</b> متعمد (مثلاً نخزن إجمالي الطلب).</td></tr>
+<tr><td>Simplicity</td><td>أقل عدد جداول وعلاقات ممكنة</td><td>التبسيط الزايد بيرجعك للجدول الواحد الكبير.</td></tr>
+<tr><td>Flexibility</td><td>التصميم يتحمل متطلبات جديدة</td><td>التعميم الزايد (جدول <code>Key/Value</code> لكل حاجة) بيضيّع الـ type safety والأداء.</td></tr>
+<tr><td>Efficiency</td><td>أنواع بيانات مناسبة و indexes</td><td>كل index بيبطّأ الكتابة ويكلف مساحة.</td></tr>
+<tr><td>Security</td><td>فصل البيانات الحساسة والصلاحيات</td><td>مثلاً جدول منفصل لبيانات الدفع بصلاحيات أضيق.</td></tr>
+</table></div>
+<p><b>مثال Denormalization مقبول:</b> تخزين <code>UnitPrice</code> داخل <code>ORDER_ITEM</code> رغم وجوده في <code>PRODUCT</code> (شفته في سلايد 11 و 33). مش تكرار غلط: سعر المنتج بيتغير بعدين وطلب قديم لازم يفضل بسعره وقت الشراء. ده نقطة مهمة في المقابلات: "التكرار المقصود بيمثل بيانات تاريخية".</p>
+
+<h2 id="f">6) مدخل الـ ERD (سلايد 9 إلى 15)</h2>
+<p><b>الـ ERD (Entity-Relationship Diagram)</b> رسم تخطيطي بيوضح الكيانات (اللي بنخزن عنها بيانات)، وخصائصها، والعلاقات بينها. دوره: لغة مشتركة بين المحلل والمبرمج والعميل قبل كتابة SQL، وتكتشف بيه التكرار والعلاقات الناقصة بسرعة.</p>
+<div class="tw"><table>
+<tr><th>المكوّن</th><th>الشكل (Chen)</th><th>معناه</th><th>مثال</th></tr>
+<tr><td>Entity</td><td>مستطيل</td><td>شيء له وجود مستقل</td><td>CUSTOMER</td></tr>
+<tr><td>Attribute</td><td>بيضاوي</td><td>صفة للكيان</td><td>Email</td></tr>
+<tr><td>Relationship</td><td>معين (Diamond)</td><td>ارتباط بين كيانات</td><td>PLACES</td></tr>
+<tr><td>Key</td><td>خط تحت الاسم (PK / FK)</td><td>بيعرّف السجل بشكل فريد</td><td><u>CustomerID</u></td></tr>
+</table></div>
+<h3>الأنواع الأشهر للرسم (وفيها تصحيح مهم)</h3>
+<p>السلايدات بتستخدم <b>Chen notation</b> (مستطيل وبيضاوي ومعين)، وده المستخدم في الجامعات والامتحانات. لكن في شغل المشاريع والأدوات (dbdiagram و draw.io و SSMS Diagrams و DbSchema) غالباً بتشوف <b>Crow's Foot</b>: الكيان جدول بأعمدته جواه، والعلاقة خط، وطرفه بيبيّن العدد (شوكة الغراب = many).</p>
+<div class="tw"><table>
+<tr><th></th><th>Chen</th><th>Crow's Foot</th></tr>
+<tr><td>الخصائص</td><td>بيضاويات حول الكيان</td><td>صفوف داخل المستطيل</td></tr>
+<tr><td>العلاقة</td><td>معين بين الكيانين</td><td>خط مباشر بعلامات على الأطراف</td></tr>
+<tr><td>Participation</td><td>خط مزدوج (total) أو مفرد (partial)</td><td>شرطة | (إجباري) أو دائرة ○ (اختياري)</td></tr>
+<tr><td>الاستخدام</td><td>التعليم والتصميم المفاهيمي</td><td>المشاريع الحقيقية وأدوات المصممين</td></tr>
+</table></div>
+<div class="box ok"><p><b>نصيحة عملية:</b> اتعلم التفكير بـ Chen (لأنه بيوضّح المفاهيم)، واتدرّب تقرأ Crow's Foot (لأنك هتقابله في الشغل). والمفاهيم واحدة: كيانات وعلاقات ومفاتيح وcardinality وparticipation.</p></div>
+<div class="box warn"><p><b class="t">الـ ERD مش:</b> (1) مش Class Diagram (الـ class فيه methods وسلوك)، (2) مش الـ Schema نفسه (الـ ERD يوصف الأفكار، والـ schema تنفيذها)، (3) مش بيحل مشاكل الأداء (ده الـ physical design).</p></div>
+
+<h2 id="q">7) أسئلة أولية (إجاباتها تحت)</h2>
+<ol>
+<li>إيه الفرق بين Conceptual و Logical design؟</li>
+<li>ليه نخزن UnitPrice في ORDER_ITEM؟ هل ده تكرار غلط؟</li>
+<li>جدول فيه عمود <code>Skills = "C#, SQL, Azure"</code>. إيه المشاكل؟</li>
+<li>مين بيعدّل الـ ERD لما المتطلبات تتغير؟</li>
+<li>هل الـ ERD بيشمل Indexes؟</li>
+<li>طلب ميخصش منتج: صحيح ولا غلط؟ ولو ده في الـ Insert، إيه اسم المشكلة؟</li>
+</ol>
+<div class="box ok"><p><b>الإجابات:</b> (1) الـ conceptual أفكار بدون جداول، والـ logical جداول وPK/FK. (2) لا، ده snapshot تاريخي للسعر وقت الشراء. (3) مفيش بحث بالمهارة، مفيش integrity، مستحيل تعمل join، وصعب تحذف مهارة واحدة (non-atomic). (4) فريق التصميم مع الـ stakeholders، وأي تغيير بيعدّي على migration. (5) لأ، الـ indexes في الـ physical design. (6) لو ممكن طلب من غير منتج فهي partial participation من ORDER، وإلا total. والمشكلة اللي بتحصل لما الجدول الواحد يمنع إضافة منتج جديد من غير طلب هي insert anomaly.</p></div>
+
+<footer>الجزء 2: Entity و Attributes بكل أنواعها. أكواد SQL من فهمي ولم أشغلها هنا، جرّبها على SQL Server أو SQLite.</footer>
+</main>
+</body>
+</html>

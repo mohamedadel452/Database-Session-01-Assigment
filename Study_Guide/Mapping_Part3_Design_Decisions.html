@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mapping (3/6): قرارات التصميم الأساسية PK و FK والتسمية والـ Indexes</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:540px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+details{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 14px;margin:.5em 0}
+summary{cursor:pointer;color:var(--acc);font-weight:700}
+.dg{direction:ltr;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin:.8em 0}
+.dg svg{min-width:700px;width:100%;height:auto;display:block}
+.bx{fill:var(--card);stroke:var(--acc);stroke-width:1.5}
+.hd{font:700 12.5px Consolas,Menlo,monospace;fill:var(--acc)}.tx{font:11.5px Consolas,Menlo,monospace;fill:var(--fg)}
+.ln{stroke:var(--fg);stroke-width:1.4;fill:none}.ds{stroke-dasharray:5 3}.op{fill:none;stroke:var(--fg)}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Mapping (الجزء 3 من 6): قرارات التصميم الأساسية</h1>
+<p class="lead">سلايدات 19 إلى 23: اختيار الـ PK والـ FK والتسمية والتخطيط للأداء. القرارات دي بتتاخد مرة واحدة وبتفضل معاك سنين، وتغييرها بعد وجود بيانات حقيقية مؤلم.</p>
+<nav><a href="#a">1. Primary Key</a><a href="#b">2. Foreign Key</a><a href="#c">3. التسمية</a><a href="#d">4. Indexes</a><a href="#e">5. أخطاء الأداء</a><a href="#f">6. Constraints</a><a href="#g">7. أعمدة التدقيق</a><a href="#x">8. تمارين</a></nav>
+
+<h2 id="a">1) اختيار الـ Primary Key (سلايد 20)</h2>
+<p>السلايد بيدي ثلاث قواعد: اختر attribute يعرّف الصف بشكل فريد، استخدم <b>surrogate key</b> لو الـ natural keys معقدة أو بتتغير، وخلي الـ PK <b>قصير ومستقر وNOT NULL</b>. ليه "قصير" بالذات؟</p>
+<div class="dg">
+<svg viewBox="0 0 760 175" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Clustered key inside nonclustered index">
+<defs><marker id="ar" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path class="op" d="M1 1L10 6L1 11"/></marker></defs>
+<rect class="bx" x="10" y="20" width="340" height="110" rx="5"/><text class="hd" x="20" y="40">Clustered index (الجدول نفسه)</text><text class="tx" x="20" y="62">مرتب بالـ PK (EmpID)</text><text class="tx" x="20" y="82">الصف كله: EmpID | Name | Email | DeptID...</text><text class="tx" x="20" y="102">1 صف = بيانات كاملة</text>
+<rect class="bx" x="410" y="20" width="340" height="110" rx="5"/><text class="hd" x="420" y="40">Nonclustered index على DeptID</text><text class="tx" x="420" y="62">كل entry = DeptID + قيمة الـ PK</text><text class="tx" x="420" y="82">(الـ PK بيتنسخ جوه كل index!)</text><text class="tx" x="420" y="102">→ PK عريض = كل index أكبر</text>
+<path class="ln ds" d="M410 75H350" marker-end="url(#ar)"/><text class="tx" x="355" y="68">Key Lookup</text>
+</svg></div>
+<p>في SQL Server الـ clustered key بيتحط في <b>كل nonclustered index</b> كمؤشر للصف. فلو الـ PK عبارة عن 4 أعمدة نصية (زي complex attribute في الجزء 2) أو GUID (16 بايت) بدل INT (4 بايت)، كل index هيبقى أكبر وأبطأ وأكلف في الذاكرة.</p>
+<div class="tw"><table>
+<tr><th>الخيار</th><th>الحجم</th><th>ترتيب الإدخال</th><th>الملاحظة</th></tr>
+<tr><td><code>INT IDENTITY</code></td><td>4B</td><td>تصاعدي</td><td>الافتراضي الأمثل في معظم الحالات، حد ~2.1 مليار</td></tr>
+<tr><td><code>BIGINT IDENTITY</code></td><td>8B</td><td>تصاعدي</td><td>للجداول الضخمة (logs, events)</td></tr>
+<tr><td><code>GUID</code> عشوائي (v4)</td><td>16B</td><td>عشوائي</td><td>page splits وfragmentation كـ clustered، مناسب كمعرّف عام فقط</td></tr>
+<tr><td>GUID متسلسل (<code>NEWSEQUENTIALID()</code> أو v7)</td><td>16B</td><td>تقريباً تصاعدي</td><td>يصلح لتوزيع الأنظمة (IDs من أكتر من مكان). EF Core بيولّد sequential افتراضياً لـ SQL Server</td></tr>
+<tr><td>Natural (Email, NationalID)</td><td>متغير</td><td>عشوائي</td><td>خليه UNIQUE مش PK</td></tr>
+</table></div>
+<pre><code>CREATE TABLE Employees (
+    EmpID INT IDENTITY(1,1) CONSTRAINT PK_Employees PRIMARY KEY,
+    PublicId UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() CONSTRAINT UQ_Employees_PublicId UNIQUE,  -- يظهر في الـ API
+    Email NVARCHAR(256) NOT NULL CONSTRAINT UQ_Employees_Email UNIQUE);
+-- الأرقام التسلسلية الداخلية بعيدة عن الـ URL فتتجنب enumeration، والـ PK الصغير يفضل سريع</code></pre>
+<div class="box warn"><p><b class="t">مفاهيم خاطئة:</b> (1) "الـ IDENTITY مضمون بلا فجوات": لأ، rollback وإعادة تشغيل بيعملوا فجوات. (2) "الـ GUID أحسن لأنه فريد عالمياً": يصلح لو IDs بتتولد من أنظمة متعددة، لكن كمفتاح clustered عشوائي هو بطيء. (3) "الـ PK لازم يكون بيانات مفهومة": العكس، المفتاح الجيد بلا معنى فلا يحتاج تغيير.</p></div>
+
+<h2 id="b">2) اختيار الـ Foreign Key (سلايد 21)</h2>
+<p>قواعد السلايد: FK بين الجداول، بيشاور على PK (أو candidate key) في الجدول الأب، وأسماء ذات معنى. وإضافات مهمة:</p>
+<pre><code>CREATE TABLE Employees (
+    EmpID INT IDENTITY PRIMARY KEY,
+    DepartmentID INT NOT NULL,
+    CONSTRAINT FK_Employees_Departments FOREIGN KEY (DepartmentID)
+        REFERENCES Departments(DepartmentID) ON DELETE NO ACTION ON UPDATE NO ACTION);
+CREATE INDEX IX_Employees_DepartmentID ON Employees(DepartmentID);   -- SQL Server ما بيعملوش تلقائياً</code></pre>
+<div class="tw"><table>
+<tr><th>ON DELETE</th><th>EF Core</th><th>إمتى</th><th>الخطر</th></tr>
+<tr><td><code>NO ACTION / RESTRICT</code></td><td><code>Restrict</code></td><td>الافتراضي الآمن (عميل له طلبات)</td><td>الحذف بيفشل لو فيه أبناء (مقصود)</td></tr>
+<tr><td><code>CASCADE</code></td><td><code>Cascade</code> (الافتراضي للعلاقة الإجبارية)</td><td>أبناء ملهمش معنى لوحدهم</td><td>حذف جماعي بغلطة واحدة، ومسارات cascade متعددة مرفوضة</td></tr>
+<tr><td><code>SET NULL</code></td><td><code>SetNull</code></td><td>علاقة اختيارية (مدير اتحذف)</td><td>لازم العمود nullable</td></tr>
+<tr><td><code>SET DEFAULT</code></td><td>-</td><td>نادر</td><td>لازم default صالح</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">مشاكل واقعية:</b></p>
+<ol>
+<li><b>Multiple cascade paths:</b> جدول <code>OrderItems</code> بيشاور على <code>Orders</code> وعلى <code>Products</code> وكل واحد بيشاور على <code>Customers</code> بـ cascade: SQL Server بيرفض (خطر دورات). اجعل واحدة <code>NO ACTION</code> وانفذ الحذف من الكود أو بـ trigger.</li>
+<li><b>EF Core للعلاقة الاختيارية:</b> الافتراضي <code>ClientSetNull</code> (بيصفّر الـ FK في الكيانات المحمّلة بس، والـ DB بيرفض لو فيه أبناء مش محمّلين). اكتب السلوك صراحة.</li>
+<li><b>مفيش index على FK:</b> الحذف من الأب والـ joins بيعملوا scan على الابن. EF Core بيضيف index تلقائياً للـ FK، لكن SQL مكتوب يدوياً لأ.</li>
+<li><b>ON UPDATE CASCADE نادراً مطلوب:</b> لأن الـ PK المفروض ما يتغيرش. لو محتاجه فالـ PK اتختار غلط.</li>
+</ol></div>
+<pre><code>modelBuilder.Entity&lt;Employee&gt;()
+    .HasOne(e =&gt; e.Department).WithMany(d =&gt; d.Employees)
+    .HasForeignKey(e =&gt; e.DepartmentID).IsRequired().OnDelete(DeleteBehavior.Restrict);</code></pre>
+
+<h2 id="c">3) التسمية المتسقة (سلايد 22)</h2>
+<div class="tw"><table>
+<tr><th>القاعدة</th><th>جيد</th><th>تجنب</th><th>السبب</th></tr>
+<tr><td>أسماء وصفية</td><td><code>Employee</code>, <code>EnrollDate</code></td><td><code>Emp</code>, <code>DeptTbl</code>, <code>Crs</code>, <code>Dt</code>, <code>AmtTot</code></td><td>الاختصار بيصعّب القراءة ويتبدل معناه</td></tr>
+<tr><td>اسم الجدول</td><td>مفرد أو جمع (اختار واحد وثبّته)</td><td>خليط <code>Employee</code> و <code>Departments</code></td><td>الاتساق أهم من النوع</td></tr>
+<tr><td>الحالة</td><td>PascalCase (SQL Server) أو snake_case (PostgreSQL)</td><td>خليط</td><td>PostgreSQL بيحوّل غير المقتبس لحروف صغيرة</td></tr>
+<tr><td>كلمات محجوزة</td><td><code>Orders</code>, <code>Users</code></td><td><code>Order</code>, <code>User</code>, <code>Group</code>, <code>Index</code></td><td>محتاج [ ] أو " " في كل استعلام</td></tr>
+<tr><td>أسماء الـ FK</td><td><code>DepartmentID</code> (نفس اسم PK الأب)</td><td><code>Dep</code>, <code>fk1</code></td><td>الربط واضح</td></tr>
+<tr><td>القيود</td><td><code>PK_Employees</code>, <code>FK_Employees_Departments</code>, <code>UQ_</code>, <code>CK_</code>, <code>IX_</code></td><td>أسماء auto مثل <code>FK__Employees__Depar__3A81B327</code></td><td>رسائل الخطأ والـ migrations</td></tr>
+<tr><td>Boolean / تاريخ</td><td><code>IsActive</code>, <code>CreatedAt</code></td><td><code>Active</code>, <code>Date1</code></td><td>المعنى من الاسم</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">تصحيح لسلايد 23:</b> السلايد بيستخدم جدول اسمه <code>ORDER</code> في مثال الـ indexes، رغم إن سلايد 22 بيقول تجنب الكلمات المحجوزة، و<code>ORDER</code> محجوزة (ORDER BY). الاسم الصح <code>Orders</code>.</p></div>
+<pre><code>// PostgreSQL مع EF Core: توحيد snake_case
+optionsBuilder.UseNpgsql(cs).UseSnakeCaseNamingConvention();     // حزمة EFCore.NamingConventions</code></pre>
+
+<h2 id="d">4) التخطيط للأداء والـ Indexes (سلايد 23)</h2>
+<p><b>الفكرة:</b> الـ index زي فهرس الكتاب: بدل ما تقلّب كل الصفحات (table scan)، بتروح مباشرة للصفحة (index seek). التكلفة: مساحة، وكل INSERT/UPDATE/DELETE لازم يعدّل الـ indexes كمان.</p>
+<div class="tw"><table>
+<tr><th>النوع</th><th>الاستخدام</th><th>مثال السلايد / عملي</th></tr>
+<tr><td>Clustered</td><td>ترتيب الجدول نفسه (واحد فقط)، غالباً الـ PK</td><td>EmpID</td></tr>
+<tr><td>Nonclustered</td><td>بحث بعمود غير PK</td><td>EMPLOYEE(DeptID) لـ "موظفين القسم"</td></tr>
+<tr><td>Composite</td><td>شرطين أو أكتر مع بعض</td><td>Orders(CustomerID, OrderDate) لتاريخ طلبات عميل</td></tr>
+<tr><td>Covering (<code>INCLUDE</code>)</td><td>يغطي الاستعلام كله بلا key lookup</td><td>(CustomerID, OrderDate) INCLUDE (Total)</td></tr>
+<tr><td>Filtered / Unique</td><td>جزء من الصفوف أو منع تكرار</td><td>WHERE IsDeleted = 0</td></tr>
+</table></div>
+<pre><code>CREATE INDEX IX_Orders_Customer_Date ON Orders(CustomerID, OrderDate) INCLUDE (TotalAmount);
+
+SELECT OrderID, OrderDate, TotalAmount FROM Orders
+WHERE CustomerID = 42 ORDER BY OrderDate DESC;       -- seek على العميل والترتيب جاهز بلا sort
+
+-- ترتيب أعمدة المركّب مهم (leftmost prefix):
+--   يخدم: WHERE CustomerID = 42   |   WHERE CustomerID = 42 AND OrderDate &gt; ...
+--   لا يخدم: WHERE OrderDate &gt; ...  (لوحده)
+-- فـ index منفصل على CustomerID لوحده مكرر ومالوش لازمة</code></pre>
+<p><b>قاعدة اختيار العمود:</b> الأعمدة المستخدمة في <code>WHERE</code> و <code>JOIN</code> و <code>ORDER BY</code>، والأولى هي الأعلى selectivity (قيم متنوعة). فهرس على <code>Gender</code> (قيمتين) نادراً يفيد.</p>
+
+<h2 id="e">5) أخطاء الأداء المتكررة</h2>
+<div class="box warn"><ol>
+<li><b>دالة على العمود (non-sargable):</b>
+<pre><code>WHERE YEAR(OrderDate) = 2024                                        -- scan: الدالة بتمنع الـ index
+WHERE OrderDate &gt;= '2024-01-01' AND OrderDate &lt; '2025-01-01'        -- seek</code></pre></li>
+<li><b>تحويل نوع ضمني:</b> مقارنة عمود <code>VARCHAR</code> بـ <code>NVARCHAR</code> parameter ممكن يعمل scan. طابق الأنواع.</li>
+<li><b>Index على كل عمود:</b> الكتابة بتبطأ والمساحة بتزيد. اقرأ الـ execution plan وادي أولوية للاستعلامات الفعلية، واحذف غير المستخدم (DMV: <code>sys.dm_db_index_usage_stats</code>).</li>
+<li><b><code>SELECT *</code>:</b> بتجيب أعمدة كبيرة وتمنع الـ covering. اختار الأعمدة.</li>
+<li><b>Deep paging بـ OFFSET:</b> <code>OFFSET 1000000 ROWS</code> لازم يتخطى مليون صف. استخدم keyset: <code>WHERE OrderID &lt; @last ORDER BY OrderID DESC</code>.</li>
+<li><b>N+1 في EF Core:</b> حلقة بتنفذ query لكل صف. استخدم <code>Include</code> أو projection.</li>
+</ol></div>
+<p><b>Partitioning والأرشفة:</b> للجداول بمئات الملايين، قسّم بالتاريخ (partitions) أو انقل القديم لجدول أرشيف. ومتخطط له من البداية: PK مناسب (يشمل عمود التقسيم)، وأنواع بيانات صغيرة، وتجنب <code>NVARCHAR(MAX)</code> في الأعمدة اللي بتتفلتر.</p>
+
+<h2 id="f">6) صندوق أدوات الـ Constraints</h2>
+<pre><code>CREATE TABLE Products (
+    ProductID INT IDENTITY CONSTRAINT PK_Products PRIMARY KEY,
+    Name  NVARCHAR(150) NOT NULL,
+    SKU   NVARCHAR(30)  NOT NULL CONSTRAINT UQ_Products_SKU UNIQUE,
+    Price DECIMAL(10,2) NOT NULL CONSTRAINT CK_Products_Price CHECK (Price &gt;= 0),
+    Stock INT           NOT NULL CONSTRAINT DF_Products_Stock DEFAULT 0 CONSTRAINT CK_Products_Stock CHECK (Stock &gt;= 0));
+modelBuilder.Entity&lt;Product&gt;().ToTable(t =&gt; t.HasCheckConstraint("CK_Products_Price", "[Price] &gt;= 0"));</code></pre>
+<p>أضف قيد على جدول موجود فيه بيانات: <code>ALTER TABLE ... WITH CHECK ADD CONSTRAINT</code> يفحص الصفوف الحالية، ولو فيها بيانات مخالفة بيفشل. نضّف الأول.</p>
+
+<h2 id="g">7) أعمدة بتضيفها وقت التصميم (بدون ما الـ ERD يذكرها)</h2>
+<ul>
+<li><b>Audit:</b> <code>CreatedAt</code> (UTC) و <code>UpdatedAt</code> و <code>CreatedBy</code>.</li>
+<li><b>Soft delete:</b> <code>IsDeleted</code> أو <code>DeletedAt</code> مع EF Core Global Query Filter، وانتبه إن UNIQUE لازم يبقى filtered index <code>WHERE IsDeleted = 0</code>.</li>
+<li><b>Concurrency:</b> <code>RowVersion</code> (<code>rowversion</code>) و <code>IsRowVersion()</code> في EF لمنع lost updates لما اتنين يعدّلوا نفس الصف.</li>
+</ul>
+<pre><code>public byte[] RowVersion { get; set; } = null!;
+modelBuilder.Entity&lt;Product&gt;().Property(p =&gt; p.RowVersion).IsRowVersion();
+// SaveChanges بترمي DbUpdateConcurrencyException لو الصف اتعدّل من حد تاني</code></pre>
+
+<h2 id="x">8) تمارين (اضغط لكشف الإجابة)</h2>
+<ol>
+<li>أصلح الأسماء: <code>tblEmp(id, nm, dt, deptid)</code> و <code>Order(ID, Amt)</code>.</li>
+<li>الاستعلام: <code>WHERE DepartmentID = 5 AND HireDate &gt; '2024-01-01'</code>. صمم index.</li>
+<li>جدول <code>OrderItems</code> بيشاور على <code>Orders</code> (ON DELETE ؟) وعلى <code>Products</code> (ON DELETE ؟).</li>
+<li>موقع بيعرض <code>/users/1001</code>. إيه الخطر وإيه الحل؟</li>
+<li>index على (CustomerID) وindex تاني على (CustomerID, OrderDate). إيه المشكلة؟</li>
+<li>الاستعلام <code>WHERE LOWER(Email) = 'a@x.com'</code> بطيء رغم index على Email. ليه؟</li>
+<li>PK جدول <code>(Country, City, Street, ZIP)</code>. اذكر 3 مشاكل.</li>
+<li>جدول بـ 500 مليون صف، PK <code>INT</code>. إيه الخطر؟</li>
+</ol>
+<details><summary>الإجابات</summary><p>(1) <code>Employees(EmployeeID, EmployeeName, HireDate, DepartmentID)</code> و <code>Orders(OrderID, TotalAmount)</code>. (2) <code>(DepartmentID, HireDate)</code>: المساواة أولاً ثم المدى. (3) Orders: CASCADE (البند ملوش معنى بلا طلب)، Products: RESTRICT/NO ACTION للحفاظ على تاريخ المبيعات. (4) enumeration/IDOR، الحل تحقق صلاحية + معرّف عام GUID. (5) الأول مكرر (leftmost prefix) وبيكلف كتابة، احذفه. (6) <code>LOWER()</code> على العمود بيمنع الـ seek. الحل collation غير حساس للحروف أو computed column مفهرس. (7) PK عريض بيكبّر كل index، قابل للتغير، نصوص بتتقارن ببطء. استخدم surrogate + unique. (8) INT حده 2.1 مليار، قرّب منه فلازم BIGINT مبكراً لأن تغييره بعد ذلك بيحتاج إعادة بناء كل الـ indexes والـ FKs.</p></details>
+
+<footer>الجزء 4: علاقات One-to-One بكل حالاتها (إجبارية، اختيارية من طرف، اختيارية من الطرفين) مع تصحيح سلايد 27. الكود من فهمي ولم أشغله هنا.</footer>
+</main>
+</body>
+</html>

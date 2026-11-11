@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mapping (1/6): الموديل العلائقي وخريطة التحويل من ERD</title>
+<style>
+:root{--bg:#f6f7f4;--fg:#1d2327;--mut:#5b6670;--card:#fff;--line:#d9ded8;--acc:#0b6b5c;--warn:#a4440f;--warnbg:#fdf0e6;--code:#10201c;--codefg:#d7efe6;--okbg:#e6f4ef}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--fg:#e4ebe8;--mut:#9aa8a3;--card:#1a2320;--line:#2c3834;--acc:#4fc2a8;--warn:#f0a066;--warnbg:#2b2118;--code:#0b1210;--okbg:#17302a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.9 "Segoe UI",Tahoma,"Noto Naskh Arabic",system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:900px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:1.9rem;line-height:1.4;margin:.2em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-inline-start:12px;border-inline-start:5px solid var(--acc)}
+h3{font-size:1.05rem;margin:1.5em 0 .2em;color:var(--acc)}
+p{margin:.55em 0}.lead{color:var(--mut)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+nav a{color:var(--fg);text-decoration:none;border:1px solid var(--line);background:var(--card);padding:3px 12px;border-radius:6px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--code);color:var(--codefg);padding:13px 16px;border-radius:8px;overflow-x:auto;font:13.5px/1.55 Consolas,Menlo,monospace;margin:.6em 0}
+code{direction:ltr;unicode-bidi:embed;font-family:Consolas,Menlo,monospace;font-size:.9em;background:var(--okbg);padding:1px 6px;border-radius:4px}
+pre code{background:none;padding:0;font-size:inherit}
+.box{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 16px;margin:1em 0}
+.warn{background:var(--warnbg);border-color:var(--warn)}.warn .t{color:var(--warn)}
+.ok{background:var(--okbg);border-color:var(--acc)}
+.tw{overflow-x:auto;margin:1em 0}
+table{border-collapse:collapse;width:100%;min-width:540px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 12px;text-align:start;vertical-align:top;font-size:.93rem}
+th{background:var(--okbg)}
+details{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:2px 14px;margin:.5em 0}
+summary{cursor:pointer;color:var(--acc);font-weight:700}
+.dg{direction:ltr;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;margin:.8em 0}
+.dg svg{min-width:720px;width:100%;height:auto;display:block}
+.bx{fill:var(--card);stroke:var(--acc);stroke-width:1.5}
+.hd{font:700 12.5px Consolas,Menlo,monospace;fill:var(--acc)}.tx{font:11.5px Consolas,Menlo,monospace;fill:var(--fg)}
+.ln{stroke:var(--fg);stroke-width:1.4;fill:none}.op{fill:none;stroke:var(--fg)}
+li{margin:.25em 0}
+footer{margin-top:3em;color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Mapping (الجزء 1 من 6): الموديل العلائقي وخريطة التحويل من ERD</h1>
+<p class="lead">ملف Session 02 - Mapping (72 سلايد). الـ ERD رسم أفكار، والـ mapping هو تحويله لجداول فعلية. الأجزاء: 1 الموديل العلائقي (هنا)، 2 الكيانات والخصائص، 3 قرارات التصميم (PK و FK والتسمية والـ indexes)، 4 علاقات 1:1، 5 علاقات 1:N و M:N و Recursive، 6 Ternary و Weak Entity ومثال كامل وبنك أسئلة.</p>
+<nav><a href="#a">1. الموديل</a><a href="#b">2. المصطلحات</a><a href="#c">3. قيود السلامة</a><a href="#d">4. NULL</a><a href="#e">5. الفوائد</a><a href="#f">6. خريطة التحويل</a><a href="#q">7. أسئلة</a></nav>
+
+<h2 id="a">1) إيه هو الـ Relational Database؟ (سلايد 4 و 5)</h2>
+<p><b>الفكرة:</b> البيانات بتتخزن في <b>جداول</b> (relations) من صفوف (tuples) وأعمدة (attributes)، والجداول بترتبط ببعض بقيم مشتركة (Foreign Keys). اقترحه E. F. Codd سنة 1970 على أساس رياضي (نظرية المجموعات والمنطق)، وده سبب إن SQL "set-based" (بتعمل على مجموعات صفوف مرة واحدة مش صف صف).</p>
+<pre><code>CREATE TABLE Departments (DepartmentID INT PRIMARY KEY, DepartmentName NVARCHAR(100) NOT NULL);
+CREATE TABLE Students    (StudentID INT PRIMARY KEY, StudentName NVARCHAR(100) NOT NULL,
+                          DepartmentID INT NOT NULL REFERENCES Departments(DepartmentID));
+
+SELECT s.StudentName, d.DepartmentName
+FROM Students s JOIN Departments d ON d.DepartmentID = s.DepartmentID;   -- الربط بالقيمة مش بمؤشرات</code></pre>
+<div class="box warn"><p><b class="t">ليه "الربط بالقيمة" مهم؟</b> في قواعد قديمة (hierarchical/network) كانت العلاقات مؤشرات فيزيائية، وأي تغيير في التخزين كان بيكسر البرامج. الموديل العلائقي فصل <b>المنطق عن التخزين</b>: أنت بتوصف "عايز إيه" والـ DBMS بيقرر "إزاي" (query optimizer). ده سبب بقاء SQL 50 سنة.</p></div>
+
+<h2 id="b">2) المصطلحات (سلايد 7) وفخ "Cardinality"</h2>
+<div class="tw"><table>
+<tr><th>مصطلح علائقي</th><th>المقابل في SQL / الرسم</th><th>معناه</th></tr>
+<tr><td>Relation</td><td>Table</td><td>مجموعة صفوف لها نفس الأعمدة</td></tr>
+<tr><td>Tuple</td><td>Row / Record</td><td>صف واحد (قيمة لكل عمود)</td></tr>
+<tr><td>Attribute</td><td>Column / Field</td><td>عمود له اسم ونوع</td></tr>
+<tr><td>Domain</td><td>Data type + CHECK</td><td>القيم المسموحة للعمود</td></tr>
+<tr><td>Degree</td><td>عدد الأعمدة</td><td>درجة الجدول (ثابتة)</td></tr>
+<tr><td>Cardinality (علائقي)</td><td>عدد الصفوف</td><td>بتتغير مع الإدخال والحذف</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">خلط شائع:</b> كلمة <b>Cardinality</b> ليها معنيين مختلفين: (1) في الـ ER هي نوع العلاقة (1:N و M:N). (2) في الموديل العلائقي (وفي SQL Server execution plans) هي <b>عدد الصفوف</b> في جدول أو نتيجة. وكمان "Cardinality of a column" في الـ indexes معناها عدد القيم المميزة (selectivity). في الامتحان اقرأ السياق.</p></div>
+<p><b>جدول ≠ Relation بالظبط:</b> الـ relation النظرية <b>مجموعة</b> (مفيش صفوف مكررة ولا ترتيب). جدول SQL ممكن يحتوي صفوف مكررة (لو مفيش PK) وبيرجع بترتيب غير مضمون من غير <code>ORDER BY</code>. عشان كده PK مش رفاهية: هو اللي بيخلي الجدول فعلاً relation.</p>
+
+<h2 id="c">3) قيود السلامة الثلاثة (Integrity)</h2>
+<div class="tw"><table>
+<tr><th>النوع</th><th>القاعدة</th><th>بتتطبق بـ</th><th>لو اتكسرت</th></tr>
+<tr><td>Entity Integrity</td><td>الـ PK مش NULL ومش مكرر</td><td><code>PRIMARY KEY</code></td><td>صفوف مفيش طريقة تميّزها</td></tr>
+<tr><td>Referential Integrity</td><td>قيمة FK لازم تكون موجودة في الجدول الأب (أو NULL)</td><td><code>FOREIGN KEY</code></td><td>صفوف يتيمة (orphans) وتقارير غلط</td></tr>
+<tr><td>Domain Integrity</td><td>القيمة من نطاق العمود</td><td>نوع البيانات، <code>CHECK</code>، <code>DEFAULT</code>، <code>NOT NULL</code></td><td>سعر سالب، تاريخ مستحيل</td></tr>
+</table></div>
+<pre><code>CREATE TABLE Courses (
+    CourseID INT PRIMARY KEY,
+    Credits  TINYINT NOT NULL CHECK (Credits BETWEEN 1 AND 6),     -- domain
+    Level    NVARCHAR(10) NOT NULL DEFAULT 'Undergrad');
+-- INSERT Credits = 9  → فشل: CHECK constraint
+-- INSERT Students.DepartmentID = 999 (مش موجود) → فشل: FOREIGN KEY</code></pre>
+<p><b>قاعدة ذهبية:</b> حط القيود في قاعدة البيانات مش في التطبيق فقط. التطبيق ممكن يتغير أو يتعدد (API وجوبّ وscripts)، وقاعدة البيانات هي الحارس الأخير. EF Core <code>HasCheckConstraint</code> و<code>IsRequired</code> بتولّدهم.</p>
+
+<h2 id="d">4) الـ NULL: أخطر قيمة في الموديل</h2>
+<p>الـ NULL معناها <b>"غير معروف أو غير موجود"</b>، مش صفر ولا نص فاضي. وأي مقارنة معاها نتيجتها <b>UNKNOWN</b> (منطق ثلاثي القيم)، مش TRUE ولا FALSE.</p>
+<pre><code>SELECT * FROM Employees WHERE ManagerID = NULL;     -- ما بترجعش أي صف أبداً
+SELECT * FROM Employees WHERE ManagerID IS NULL;    -- الصح
+
+-- أخطر باگ: NOT IN مع NULL
+SELECT * FROM Departments WHERE DepartmentID NOT IN (SELECT DepartmentID FROM Employees);
+-- لو عمود Employees.DepartmentID فيه NULL واحد → النتيجة فاضية! (لأن x NOT IN (..., NULL) = UNKNOWN)
+SELECT * FROM Departments d WHERE NOT EXISTS (SELECT 1 FROM Employees e WHERE e.DepartmentID = d.DepartmentID);   -- الحل</code></pre>
+<p><b>علاقتها بالـ mapping:</b> كل قرار "FK يقبل NULL ولا لأ" هو قرار <b>Participation</b> (الجزء 4 من ERD). و<code>UNIQUE</code> على عمود nullable بيتصرف مختلف من DBMS لـ DBMS (هنشرحه في الـ 1:1).</p>
+
+<h2 id="e">5) فوائد الـ Relational DB (سلايد 6 و 8) وحدودها</h2>
+<div class="tw"><table>
+<tr><th>الفائدة</th><th>السبب التقني</th><th>الحدود</th></tr>
+<tr><td>Integrity & Accuracy</td><td>constraints + transactions (ACID)</td><td>القيود بتكلّف في الكتابة الكبيرة</td></tr>
+<tr><td>Reduced Redundancy</td><td>Normalization: كل حقيقة في مكان واحد</td><td>joins أكتر، وأحياناً denormalization للقراءة</td></tr>
+<tr><td>Scalability</td><td>indexes، partitioning، replicas للقراءة</td><td>التوسع الأفقي للكتابة أصعب من NoSQL</td></tr>
+<tr><td>Standardization</td><td>SQL لغة معيارية</td><td>لكل DBMS لهجته (T-SQL مقابل PL/pgSQL)</td></tr>
+<tr><td>Multi-user</td><td>locking وisolation levels</td><td>deadlocks لو التصميم أو الاستعلامات سيئة</td></tr>
+<tr><td>Querying & Reporting</td><td>joins و aggregates و window functions</td><td>JSON/بيانات غير منتظمة أضعف</td></tr>
+</table></div>
+
+<h2 id="f">6) الصورة الكبيرة: خريطة تحويل الـ ERD</h2>
+<div class="dg">
+<svg viewBox="0 0 800 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapping order">
+<defs><marker id="ar" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path class="op" d="M1 1L10 6L1 11"/></marker></defs>
+<rect class="bx" x="8" y="30" width="120" height="80" rx="5"/><text class="hd" x="16" y="52">1 Entities</text><text class="tx" x="16" y="72">كل entity جدول</text><text class="tx" x="16" y="88">+ PK</text>
+<rect class="bx" x="150" y="30" width="120" height="80" rx="5"/><text class="hd" x="158" y="52">2 Weak</text><text class="tx" x="158" y="72">جدول + PK مالك</text><text class="tx" x="158" y="88">+ partial key</text>
+<rect class="bx" x="292" y="30" width="120" height="80" rx="5"/><text class="hd" x="300" y="52">3 Attributes</text><text class="tx" x="300" y="72">composite: أعمدة</text><text class="tx" x="300" y="88">multi: جدول</text>
+<rect class="bx" x="434" y="30" width="120" height="80" rx="5"/><text class="hd" x="442" y="52">4 Relations</text><text class="tx" x="442" y="72">1:1 و 1:N: FK</text><text class="tx" x="442" y="88">M:N: جدول</text>
+<rect class="bx" x="576" y="30" width="120" height="80" rx="5"/><text class="hd" x="584" y="52">5 N-ary</text><text class="tx" x="584" y="72">ternary: جدول</text><text class="tx" x="584" y="88">بـ 3 FKs</text>
+<rect class="bx" x="710" y="30" width="85" height="80" rx="5"/><text class="hd" x="716" y="52">6 Polish</text><text class="tx" x="716" y="72">constraints</text><text class="tx" x="716" y="88">indexes</text>
+<path class="ln" d="M128 70H150"/><path class="ln" d="M270 70H292"/><path class="ln" d="M412 70H434"/><path class="ln" d="M554 70H576"/><path class="ln" d="M696 70H710"/>
+</svg></div>
+<div class="tw"><table>
+<tr><th>عنصر الـ ERD</th><th>الناتج العلائقي</th><th>الجزء</th></tr>
+<tr><td>Strong Entity</td><td>جدول، PK من الـ key attribute</td><td>2</td></tr>
+<tr><td>Simple Attribute</td><td>عمود</td><td>2</td></tr>
+<tr><td>Composite Attribute</td><td>عمود لكل جزء</td><td>2</td></tr>
+<tr><td>Derived Attribute</td><td>لا يُخزّن (يُحسب)</td><td>2</td></tr>
+<tr><td>Multi-valued / Complex</td><td>جدول منفصل بـ FK</td><td>2</td></tr>
+<tr><td>1:1</td><td>FK + UNIQUE في أحد الجدولين (أو جدول علاقة)</td><td>4</td></tr>
+<tr><td>1:N</td><td>FK في جانب N</td><td>5</td></tr>
+<tr><td>M:N</td><td>جدول وسيط بـ FKين (PK مركب)</td><td>5</td></tr>
+<tr><td>Recursive</td><td>FK على نفس الجدول</td><td>5</td></tr>
+<tr><td>Ternary</td><td>جدول بـ 3 FKs</td><td>6</td></tr>
+<tr><td>Weak Entity</td><td>جدول بـ PK = (FK المالك + Partial Key)</td><td>6</td></tr>
+<tr><td>Total participation</td><td><code>NOT NULL</code> على الـ FK (في جانب الـ FK فقط)</td><td>3 إلى 6</td></tr>
+</table></div>
+<div class="box warn"><p><b class="t">ترتيب إنشاء الجداول مهم:</b> لازم الجدول الأب يتعمل قبل اللي بيشاور عليه. لو عندك دورة (A يشاور على B وB على A) استخدم FK nullable وأضف القيد بـ <code>ALTER TABLE</code> بعد الإنشاء. في EF Core: <code>dotnet ef migrations add Initial</code> ثم <code>dotnet ef database update</code>، والـ migration بيرتب الجداول تلقائياً.</p></div>
+
+<h2 id="q">7) أسئلة (اضغط لكشف الإجابة)</h2>
+<ol>
+<li>جدول فيه 5 أعمدة و 200 صف. إيه الـ degree والـ cardinality (علائقي)؟</li>
+<li>ليه ما ينفعش <code>WHERE Phone = NULL</code>؟</li>
+<li>إيه الفرق بين Entity Integrity و Referential Integrity؟</li>
+<li>جدول بلا PK، هل هو relation بالمعنى النظري؟</li>
+<li>مبرمج حذف صف في Departments وفيه موظفين بيشاوروا عليه، من غير FK. إيه اللي يحصل؟</li>
+<li>ليه "الربط بالقيمة" ميزة؟</li>
+<li>استعلام <code>NOT IN</code> رجع فاضي رغم إن فيه بيانات. أول حاجة تتأكد منها؟</li>
+</ol>
+<details><summary>الإجابات</summary><p>(1) degree = 5، cardinality = 200. (2) أي مقارنة مع NULL نتيجتها UNKNOWN فبتتعامل كـ FALSE، استخدم IS NULL. (3) الأول عن PK (مش NULL ومش مكرر)، والتاني عن FK (لازم يشاور على موجود). (4) لأ، لأن relation مجموعة بلا تكرار، والـ PK هو اللي يضمن ده. (5) الموظفين يفضلوا بـ DepartmentID لقسم مش موجود (orphans)، وأي join بيخسرهم والتقارير غلط. (6) لأنه بيفصل المنطق عن التخزين، فتقدر تغيّر الـ indexes والفيزيائي من غير ما تكسر الاستعلامات. (7) هل subquery فيها NULL؟ لو آه استخدم NOT EXISTS أو IS NOT NULL جوه الـ subquery.</p></details>
+
+<footer>الجزء 2: تحويل الكيانات والخصائص (Simple و Composite و Derived و Multivalued و Complex) مع SQL و EF Core. الكود من فهمي ولم أشغله هنا.</footer>
+</main>
+</body>
+</html>
